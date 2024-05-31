@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+        
         {
             "name": "Python: Celery",
             "type": "debugpy",
@@ -27,16 +28,50 @@
             "env": {
                 "FLASK_APP": "app.py",
                 "FLASK_DEBUG": "1",
+                // "GEVENT_SUPPORT": "True"
+            },
+            "args": [
+                "run",
+                "--host=0.0.0.0",
+                "--port=5001",
+                "--no-debugger",
+                "--no-reload"
+                // "--debug",
+                // "--reload",
+            ],
+            "jinja": true,
+            "justMyCode": false
+        },
+        {
+            "name": "Python: Flask2",
+            "type": "python",
+            "request": "launch",
+            // "module": "flask",
+            "program": "${workspaceFolder}/app.py",
+            "stopOnEntry": false,
+            "env": {
+                "FLASK_APP": "app.py",
+                "FLASK_DEBUG": "1",
+                "FLASK_ENV": "development",
+                // "FLASK_RUN_HOST": "0.0.0.0",
+                // "FLASK_RUN_PORT": "5001",
+                // "FLASK_RUN_RELOAD": "true",
+                // "FLASK_RUN_DEBUG": "true",
+                // "FLASK_RUN_WITH_RELOADER": "true",
+                // "FLASK_RUN_SSL_CERT": "${workspaceFolder}/cert.pem",
                 "GEVENT_SUPPORT": "True"
             },
             "args": [
                 "run",
                 "--host=0.0.0.0",
                 "--port=5001",
-                "--debug"
+                "--debug",
+                "--reload",
             ],
+            "envFile": "${workspaceFolder}/.env",
+            "redirectOutput": true,
             "jinja": true,
-            "justMyCode": true
+            "justMyCode": false
         }
     ]
 }

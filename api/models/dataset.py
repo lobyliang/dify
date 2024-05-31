@@ -532,3 +532,27 @@ class DatasetCollectionBinding(db.Model):
     type = db.Column(db.String(40), server_default=db.text("'dataset'::character varying"), nullable=False)
     collection_name = db.Column(db.String(64), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.text('CURRENT_TIMESTAMP(0)'))
+
+
+class DocumentSegmentsAttach(db.Model):
+    __tablename__ = 'document_segments_attachs'
+    __table_args__ = (
+        db.PrimaryKeyConstraint('id', name='document_segments_attachs_pkey'),
+        db.Index('doc_seg_id_idx','doc_seg_id')
+    )
+    id = db.Column(StringUUID, nullable=False,
+                   server_default=db.text('uuid_generate_v4()'))
+    doc_seg_id = db.Column(StringUUID, nullable=False)# DocumentSegment id
+    attach_type=db.Column(db.String(10),server_default=db.text('file'))# cover 封面,attach附件
+    source = db.Column(db.String(10),server_default=db.text('url'))# file 本地文件
+    storage_type = db.Column(db.String(16),nullable=False,server_default=db.text('local')) 
+    file_name= db.Column(db.String(1024),nullable=False) #文件后缀名
+    size = db.Column(db.Integer,nullable=False,server_default=db.text('0'))
+    file = db.Column(db.String(1024),nullable=False) #,文件UUID，或URL地址
+    mime_type=db.Column(db.String(64),nullable=False) #
+    extension = db.Column(db.String(16),nullable=False) #文件后缀名
+    created_by = db.Column(db.String(64), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, server_default=db.text('CURRENT_TIMESTAMP(0)'))
+    used_times = db.Column(db.Integer, nullable=False, server_default=db.text('0'))
+    # used_by = db.Column(db.String(64), nullable=True)
+    # used_at = db.Column(db.DateTime, nullable=True)

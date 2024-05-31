@@ -137,6 +137,7 @@ def validate_dataset_token(view=None):
         @wraps(view)
         def decorated(*args, **kwargs):
             api_token = validate_and_get_api_token('dataset')
+            print("BBB:",api_token.tenant_id)
             tenant_account_join = db.session.query(Tenant, TenantAccountJoin) \
                 .filter(Tenant.id == api_token.tenant_id) \
                 .filter(TenantAccountJoin.tenant_id == Tenant.id) \
@@ -155,6 +156,8 @@ def validate_dataset_token(view=None):
                     raise Unauthorized("Tenant owner account does not exist.")
             else:
                 raise Unauthorized("Tenant does not exist.")
+            print("CCCC")
+            # kwargs['tenant_id'] = api_token.tenant_id
             return view(api_token.tenant_id, *args, **kwargs)
         return decorated
 

@@ -80,7 +80,9 @@ class FileSupportTypeApi(Resource):
         allowed_extensions = UNSTRUSTURED_ALLOWED_EXTENSIONS if etl_type == 'Unstructured' else ALLOWED_EXTENSIONS
         return {'allowed_extensions': allowed_extensions}
 
-
+    
 api.add_resource(FileApi, '/files/upload')
 api.add_resource(FilePreviewApi, '/files/<uuid:file_id>/preview')
 api.add_resource(FileSupportTypeApi, '/files/support-type')
+
+

@@ -17,3 +17,18 @@ file_fields = {
     'created_by': fields.String,
     'created_at': TimestampField,
 }
+
+chunck_attach_fields={
+        'id': fields.String,
+        'doc_seg_id': fields.String,
+        'attach_type': fields.String,
+        'source': fields.String,
+        'storage_type':fields.String,
+        'file_name': fields.String,
+        'size': fields.Integer,
+        'file': fields.String,
+        'extension': fields.String,
+        'mime_type': fields.String,
+        'created_by': fields.String,
+        'created_at': TimestampField,
+}

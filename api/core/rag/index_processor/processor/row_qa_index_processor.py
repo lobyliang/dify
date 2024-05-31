@@ -24,10 +24,10 @@ from models.model import UploadFile
 from pathlib import Path
 from extensions.ext_storage import storage
 
-class QAIndexProcessor(BaseIndexProcessor):
+class ROW_QAIndexProcessor(BaseIndexProcessor):
     def extract(self, extract_setting: ExtractSetting, **kwargs) -> list[Document]:
         if extract_setting.upload_file.mime_type=='text/csv' and \
-        extract_setting.upload_file.name.split('.')[0].endswith('QA'):
+            extract_setting.upload_file.name.split('.')[0].endswith('QA'):
             with tempfile.TemporaryDirectory() as temp_dir:
                 upload_file: UploadFile = extract_setting.upload_file
                 suffix = Path(upload_file.key).suffix
@@ -39,12 +39,12 @@ class QAIndexProcessor(BaseIndexProcessor):
                     text_docs = self.format_by_template(fileStorage)
         else:
             text_docs = ExtractProcessor.extract(extract_setting=extract_setting,
-                                             is_automatic=kwargs.get('process_rule_mode') == "automatic")
+                                                is_automatic=kwargs.get('process_rule_mode') == "automatic")
         return text_docs
 
     def transform(self, documents: list[Document], **kwargs) -> list[Document]:
-        splitter = self._get_splitter(processing_rule=kwargs.get('process_rule'),
-                                      embedding_model_instance=kwargs.get('embedding_model_instance'))
+        # splitter = self._get_splitter(processing_rule=kwargs.get('process_rule'),
+        #                               embedding_model_instance=kwargs.get('embedding_model_instance'))
 
         # Split the text documents into nodes.
         all_documents = []
@@ -55,7 +55,7 @@ class QAIndexProcessor(BaseIndexProcessor):
             document.page_content = document_text
 
             # parse document to nodes
-            document_nodes = splitter.split_documents([document])
+            document_nodes = [document] #splitter.split_documents([document])
             split_documents = []
             for document_node in document_nodes:
 
@@ -73,24 +73,21 @@ class QAIndexProcessor(BaseIndexProcessor):
                     document_node.page_content = page_content
                     split_documents.append(document_node)
             all_documents.extend(split_documents)
-        for i in range(0, len(all_documents), 10):
-            threads = []
-            sub_documents = all_documents[i:i + 10]
-            for doc in sub_documents:
-                self._format_qa_document(flask_app=current_app._get_current_object(),tenant_id=kwargs.get('tenant_id'),\
-                                         document_node=doc,all_qa_documents=all_qa_documents,document_language=kwargs.get('doc_language', 'English'))
-                
-            #     document_format_thread = threading.Thread(target=self._format_qa_document, kwargs={
-            #         'flask_app': current_app._get_current_object(),
-            #         'tenant_id': kwargs.get('tenant_id'),
-            #         'document_node': doc,
-            #         'all_qa_documents': all_qa_documents,
-            #         'document_language': kwargs.get('doc_language', 'English')})
-            #     threads.append(document_format_thread)
-            #     document_format_thread.start()
-            # for thread in threads:
-            #     thread.join()
-        return all_qa_documents
+        # for i in range(0, len(all_documents), 10):
+        #     threads = []
+        #     sub_documents = all_documents[i:i + 10]
+        #     for doc in sub_documents:
+        #         document_format_thread = threading.Thread(target=self._format_qa_document, kwargs={
+        #             'flask_app': current_app._get_current_object(),
+        #             'tenant_id': kwargs.get('tenant_id'),
+        #             'document_node': doc,
+        #             'all_qa_documents': all_qa_documents,
+        #             'document_language': kwargs.get('doc_language', 'English')})
+        #         threads.append(document_format_thread)
+        #         document_format_thread.start()
+        #     for thread in threads:
+        #         thread.join()
+        return all_documents
 
     def format_by_template(self, file: FileStorage, **kwargs) -> list[Document]:
 

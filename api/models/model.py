@@ -1327,3 +1327,4 @@ class TagBinding(db.Model):
     target_id = db.Column(StringUUID, nullable=True)
     created_by = db.Column(StringUUID, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.text('CURRENT_TIMESTAMP(0)'))
+
