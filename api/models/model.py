@@ -75,6 +75,14 @@ class App(db.Model):
     is_universal = db.Column(db.Boolean, nullable=False, server_default=db.text('false'))
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.text('CURRENT_TIMESTAMP(0)'))
     updated_at = db.Column(db.DateTime, nullable=False, server_default=db.text('CURRENT_TIMESTAMP(0)'))
+    ###loby####
+    cmd = db.Column(db.String(128),nullable=True)
+    category = db.Column(db.String(24),nullable=True)
+    category_name = db.Column(db.String(24),nullable=True)
+    func_name = db.Column(db.String(32),nullable=True)
+    chat_icon = db.Column(db.String(256),nullable=True)
+    is_robot = db.Column(db.Boolean,nullable=False, server_default=db.text('false'))
+    ###############
 
     @property
     def desc_or_prompt(self):
@@ -657,6 +665,9 @@ class Message(db.Model):
     updated_at = db.Column(db.DateTime, nullable=False, server_default=db.text('CURRENT_TIMESTAMP(0)'))
     agent_based = db.Column(db.Boolean, nullable=False, server_default=db.text('false'))
     workflow_run_id = db.Column(StringUUID)
+    ###loby####
+    cmd = db.Column(db.String(24), nullable=True)
+    ##########
 
     @property
     def re_sign_file_url_answer(self) -> str:

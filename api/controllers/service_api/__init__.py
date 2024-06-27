@@ -9,3 +9,6 @@ api = ExternalApi(bp)
 from . import index
 from .app import app, audio, completion, conversation, file, message, workflow
 from .dataset import dataset, document, segment
+from .dc_auth import tenant
+from .dc_dataset import chunckattach,ds_create,ds_query,hit_testing
+from .robot import app_questions

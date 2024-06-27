@@ -9,8 +9,8 @@
             "type": "debugpy",
             "request": "launch",
             "module": "celery",
-            "justMyCode": true,
-            "args": ["-A", "app.celery", "worker", "-P", "gevent", "-c", "1", "--loglevel", "info", "-Q", "dataset,generation,mail"],
+            "justMyCode": false,
+            "args": ["-A", "app.celery", "worker", "-P", "gevent", "-c", "1", "--loglevel", "info", "-Q", "dataset,generation,mail,app_question"],
             "envFile": "${workspaceFolder}/.env",
             "env": {
                 "FLASK_APP": "app.py",
@@ -27,8 +27,8 @@
             "module": "flask",
             "env": {
                 "FLASK_APP": "app.py",
-                "FLASK_DEBUG": "1",
-                "GEVENT_SUPPORT": "True"
+                "FLASK_DEBUG": "1"
+                // "GEVENT_SUPPORT": "True"
             },
             "args": [
                 "run",
@@ -38,6 +38,24 @@
             ],
             "jinja": true,
             "justMyCode": true,
+            "python": "${command:python.interpreterPath}"
+        },
+        {
+            "name": "Python: dbUpgrade",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "flask",
+            "env": {
+                "FLASK_APP": "app.py",
+                "FLASK_DEBUG": "1"
+                // "GEVENT_SUPPORT": "True"
+            },
+            "args": [
+                "db",
+                "upgrade"
+            ],
+            "jinja": true,
+            "justMyCode": false,
             "python": "${command:python.interpreterPath}"
         }
     ]

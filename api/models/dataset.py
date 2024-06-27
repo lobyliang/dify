@@ -472,6 +472,10 @@ class DatasetQuery(db.Model):
     content = db.Column(db.Text, nullable=False)
     source = db.Column(db.String(255), nullable=False)
     source_app_id = db.Column(StringUUID, nullable=True)
+    ####loby####
+    like = db.Column(db.Integer, nullable=True, default=0)
+    dislike = db.Column(db.Integer, nullable=True, default=0)
+    ############
     created_by_role = db.Column(db.String, nullable=False)
     created_by = db.Column(StringUUID, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.current_timestamp())

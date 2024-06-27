@@ -13,6 +13,7 @@ from core.rag.models.document import Document
 from extensions.ext_database import db
 from models.account import Account
 from models.dataset import Dataset, DatasetQuery, DocumentSegment
+from models.model import EndUser
 
 default_retrieval_model = {
     'search_method': 'semantic_search',
@@ -27,6 +28,61 @@ default_retrieval_model = {
 
 
 class HitTestingService:
+
+    @classmethod
+    def retrieve_by_endUser(cls, dataset: Dataset, query: str, endUser: EndUser, retrieval_model: dict, limit: int = 10) -> dict:
+        if dataset.available_document_count == 0 or dataset.available_segment_count == 0:
+            return {
+                "query": {
+                    "content": query,
+                    "tsne_position": {'x': 0, 'y': 0},
+                },
+                "records": []
+            }
+
+        start = time.perf_counter()
+
+        # get retrieval model , if the model is not setting , using default
+        if not retrieval_model:
+            retrieval_model = dataset.retrieval_model if dataset.retrieval_model else default_retrieval_model
+
+        # get embedding model
+        model_manager = ModelManager()
+        embedding_model = model_manager.get_model_instance(
+            tenant_id=dataset.tenant_id,
+            model_type=ModelType.TEXT_EMBEDDING,
+            provider=dataset.embedding_model_provider,
+            model=dataset.embedding_model
+        )
+
+        embeddings = CacheEmbedding(embedding_model)
+
+        all_documents = RetrievalService.retrieve(retrival_method=retrieval_model['search_method'],
+                                                  dataset_id=dataset.id,
+                                                  query=query,
+                                                  top_k=retrieval_model['top_k'],
+                                                  score_threshold=retrieval_model['score_threshold']
+                                                  if retrieval_model['score_threshold_enabled'] else None,
+                                                  reranking_model=retrieval_model['reranking_model']
+                                                  if retrieval_model['reranking_enable'] else None
+                                                  )
+
+        end = time.perf_counter()
+        logging.debug(f"Hit testing retrieve in {end - start:0.4f} seconds")
+
+        dataset_query = DatasetQuery(
+            dataset_id=dataset.id,
+            content=query,
+            source='hit_testing',
+            created_by_role='end_user',
+            created_by=endUser.id
+        )
+
+        db.session.add(dataset_query)
+        db.session.commit()
+
+        return cls.compact_retrieve_response(dataset, embeddings, query, all_documents)
+
     @classmethod
     def retrieve(cls, dataset: Dataset, query: str, account: Account, retrieval_model: dict, limit: int = 10) -> dict:
         if dataset.available_document_count == 0 or dataset.available_segment_count == 0:

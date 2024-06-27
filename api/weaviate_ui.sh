@@ -1,0 +1,1 @@
+$ docker run -e WEAVIATE_URL=http://localhost:8091 -e WEAVIATE_API_KEYS=WVF5YThaHlkYwhGUSmCRgsX3tD5ngdN8pkih naaive/weaviate-ui:latest

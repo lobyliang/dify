@@ -16,10 +16,14 @@ logger = logging.getLogger(__name__)
 
 
 class ModelProviderExtension(BaseModel):
-    provider_instance: ModelProvider
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    provider_instance:ModelProvider
     name: str
     position: Optional[int] = None
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    # class Config:
+    #     arbitrary_types_allowed = True
+    
+    
 
 
 class ModelProviderFactory:

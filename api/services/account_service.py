@@ -206,6 +206,19 @@ class AccountService:
 
 class TenantService:
 
+    ###loby####
+    @staticmethod
+    def get_tenant_creater(tenant_id:str) -> Account:
+        """Get tenant count"""
+        tenantAccount = db.session.query(TenantAccountJoin).filter(
+            TenantAccountJoin.tenant_id == tenant_id,
+            TenantAccountJoin.role == TenantAccountRole.OWNER
+        ).first()
+        if not tenantAccount:
+            raise TenantNotFound("Tenant not found.")
+        account = db.session.query(Account).filter(Account.id == tenantAccount.account_id).one_or_none()
+        return account
+    ########
     @staticmethod
     def create_tenant(name: str) -> Tenant:
         """Create tenant"""
