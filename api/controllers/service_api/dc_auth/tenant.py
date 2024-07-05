@@ -4,13 +4,16 @@ import json
 import logging
 from flask import current_app
 from flask_restful import Resource, reqparse
+from controllers.service_api.wraps import DatasetApiResource
 from core.model_runtime.entities.model_entities import ProviderModel
+from core.model_runtime.utils.encoders import jsonable_encoder
 from libs.passport import PassportService
 from models.account import Account, AccountStatus
 from models.model import ApiToken
 from models.provider import TenantDefaultModel
 from controllers.service_api import api
 from services.account_service import RegisterService, TenantService
+from services.model_provider_service import ModelProviderService
 from .default_model_service import DefaultModelService
 from extensions.ext_database import db
    # 以下是各模型的 credentials 取值
@@ -298,5 +301,27 @@ class TenantManage(Resource):
         db.session.commit()
         return key
     
+class RAGModelProviderModelParameterRuleApi(DatasetApiResource):
+
+    def get(self,tenant_id,provider: str):
+        parser = reqparse.RequestParser()
+        parser.add_argument('model', type=str, required=True, nullable=False, location='args')
+        args = parser.parse_args()
+
+        # tenant_id = current_user.current_tenant_id
+
+        model_provider_service = ModelProviderService()
+        parameter_rules = model_provider_service.get_model_parameter_rules(
+            tenant_id=tenant_id,
+            provider=provider,
+            model=args['model']
+        )
+
+        return jsonable_encoder({
+            "data": parameter_rules
+        })
+    
+api.add_resource(RAGModelProviderModelParameterRuleApi, '/dreamcloud/model-providers/<string:provider>/models/parameter-rules')    
+
 api.add_resource(TenantManage, '/dreamcloud/tenant/create')    
 # api.add_resource(TenantManage, '/dreamcloud/tenant/<string:tenant_id>/delete')    

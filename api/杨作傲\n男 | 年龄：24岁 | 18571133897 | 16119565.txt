@@ -1,0 +1,243 @@
+杨作傲\n男 | 年龄：24岁 | 18571133897 | 1611956508@qq.com\n2年工作经验 | 求职意向：Java | 期望薪资：8-10K | 期望城市：武汉\n个人优势\n● 熟练使用 Java 语言开发，具有良好的编码规范\n● 熟悉基于 SSM、SpringBoot 框架开发\n● 熟悉 Mysql、Oracle 数据库\n● 熟练使用 IDEA、Git、PostMan、PLSQL、Maven 等开发工具\n● 熟悉 Linux 系统日志排查、文件操作等常用命令\n● 了解 SpringCloud、Dubbo ，以及 Redis、RabbitMQ、Zookeeper 的中间件使用\n● 了解 HTML、CSS、Js、Ajax、Freemarker、Vue\n● 了解 JIRA、SVN 的使用\n● 了解基于 Activiti 工作流开发\n工作经历\n杭州财人汇网络股份有限公司武汉分公司 Java 2021.07-2022.12\n1.根据项目立项情况，参与需求评审，结合项目需求提出开发建议，会后整理评审结果，制定开发计划，确立项目开发实施\n方案，并制定相应的开发文档。\n2.根据开发文档，独立负责项目中后端接口的开发，制定接口文档，设计数据库表字段及相应索引，结合接口文档完成接口\n开发及自测工作。\n3.联调前端及其他业务部门，并实时跟进业务开发进度。\n4,配合测试部门完成测试及上线工作，对测试提出的问题进行相应的修改。\n5.负责生产环境遇到的问题进行排查定位，并进行修复升级。\n项目经历\n企业版网掌厅 Java开发 2021.07-2022.12\n项目使用的技术：SpringBoot、SpringCloud、Dubbo、Redis、ActiveMQ、MyBatisPlus、Gradle、Activiti、Oracle\n开发工具：IDEA、Git、PLSQL、PostMan、Xshell、Xftp、SVN.\n项目简介：该项目采用前后端分离的分布式架构开发，主要是为已开户的客户提供证券业务办理。\n项目主要分为4 大模块：柜台模块、业务模块、工作流模块、后台管理模块，柜台接口服务模块和工作流模块是服务提供\n方，业务模块是服务的消费方，采用 Dubbo 进行远程调用，项目开发环境使用了 Nacos 做服务的注册中心和配置中心,使\n用 mq 实现短信的功能的实现，使用 redis 分布式锁解决生产上手机信息修改和基本信息修改流程并发调用修改接口导致\n修改重置的问题。\n1. 柜台模块主要对接各个券商的柜台系统，对接各个券商的柜台系统是通过自定义配置和自定义注解的方式通过反射使对\n接柜台接口的调用统一化处理。\n2. 业务产品模块主要是对业务功能的具体实现。\n3. 工作流模块主要是工作流核心代码实现以及业务相关的工作流程配置文件开发。\n4. 后台模块主要用于流程文件的编写，短信发送信息查看，排查生产问题相关信息的获取，视频认证，协议模板的设置\n等，该项目的主要作用用于券商方面的后台管理，权限检查等网上购物 Java开发 2021.01-2021.06\n该项目是一个综合性平台，类似京东商城，天猫商城。用户可在该系统查看商品，添加购物车，以及在购物车进行付款，\n管理员，运营可以在平台后台管理系统中管理商品，订单等。客服可以在后台管理系统中处理用户的询问以及投诉.\n使用的技术有 Spring,springMVC,Mybatis等.其中控制层采用 springMVC 框架开发；业务逻辑层封装业务流程,为适应业\n务的变更,每一业务模块均有专门的接口及实现类.\n利用 Spring的 IOC 功能将实现类注入到容器中；数据访问层借助于 mybatis 实现,代码简洁，适应不同的数据库.事务部分\n利用 Spring 的声明式事务管理.同时使用 http 协议传递 json 数据方式实现.这样及降低了系统之间的耦合度,又提高了系统\n的扩展性。为了提高系统的性能使用 redis 做某一些业务的缓存（点赞，购物车信息）.\n该项目主要包括以下模块：\n● 后台管理系统：管理商品，订单，类目，商品规格属性，用户管理等功能。\n● 前台系统：用户可以在前台系统中进行注册，登录，浏览商品，下单等操作。\n● 购物车系统：用户可以在首页目录发现中意的商品可添加至购物车，企业可进行清空，删除，付款等功能。\n● 订单系统：提供下单，查询订单，修改订单状态，定时处理订单。\n● 搜索系统：提供商品价格的搜索功能。\n教育经历\n武昌首义学院 本科 计算机科学与技术 2017-2021\n1.在校担任班级心理委员\n2.在校获得精神文明单项奖，优秀班干称号\n3.在校主修Java，c++，Python，数据结构，算法，组成原理，操作系统，计算机网络，Linux等
+
+{
+  "pre_prompt": "根据已知知识，回答用户问题。\n如果已知知识中不包含用户问题的答案，则回答“我不知道”\n",
+  "prompt_type": "simple",
+  "chat_prompt_config": {},
+  "completion_prompt_config": {},
+  "user_input_form": [],
+  "dataset_query_variable": "",
+  "opening_statement": "",
+  "suggested_questions": [],
+  "more_like_this": {
+    "enabled": false
+  },
+  "suggested_questions_after_answer": {
+    "enabled": false
+  },
+  "speech_to_text": {
+    "enabled": false
+  },
+  "text_to_speech": {
+    "enabled": false
+  },
+  "retriever_resource": {
+    "enabled": false
+  },
+  "sensitive_word_avoidance": {
+    "enabled": false,
+    "type": "",
+    "configs": []
+  },
+  "agent_mode": {
+    "enabled": false,
+    "max_iteration": 5,
+    "strategy": "function_call",
+    "tools": []
+  },
+  "model": {
+    "provider": "xinference",
+    "name": "qwen-chat14b-4bit",
+    "mode": "chat",
+    "completion_params": {}
+  },
+  "dataset_configs": {
+    "retrieval_model": "single",
+    "datasets": {
+      "datasets": [
+        {
+          "dataset": {
+            "enabled": true,
+            "id": "43607018-bbd6-4c6d-8666-eeab73532863"
+          }
+        }
+      ]
+    }
+  },
+  "file_upload": {
+    "image": {
+      "enabled": false,
+      "number_limits": 3,
+      "detail": "high",
+      "transfer_methods": [
+        "remote_url",
+        "local_file"
+      ]
+    }
+  }
+}
+
+
+
+{
+    "pre_prompt": "根据已知知识，回答用户问题。\n如果已知知识中不包含用户问题的答案，则回答“我不知道”\n",
+    "prompt_type": "simple",
+    "chat_prompt_config": {},
+    "completion_prompt_config": {},
+    "user_input_form": [],
+    "dataset_query_variable": "",
+    "opening_statement": "",
+    "suggested_questions": [],
+    "more_like_this": {
+        "enabled": false
+    },
+    "suggested_questions_after_answer": {
+        "enabled": false
+    },
+    "speech_to_text": {
+        "enabled": false
+    },
+    "text_to_speech": {
+        "enabled": false
+    },
+    "retriever_resource": {
+        "enabled": false
+    },
+    "sensitive_word_avoidance": {
+        "enabled": false,
+        "type": "",
+        "configs": []
+    },
+    "agent_mode": {
+        "enabled": false,
+        "max_iteration": 5,
+        "strategy": "function_call",
+        "tools": []
+    },
+    "model": {
+        "provider": "xinference",
+        "name": "qwen-chat14b-4bit",
+        "mode": "chat",
+        "completion_params": {}
+    },
+    "dataset_configs": {
+        "retrieval_model": "single",
+        "datasets": {
+            "datasets": [
+                {
+                    "dataset": {
+                        "enabled": true,
+                        "id": "43607018-bbd6-4c6d-8666-eeab73532863"
+                    }
+                }
+            ]
+        }
+    },
+    "file_upload": {
+        "image": {
+            "enabled": false,
+            "number_limits": 3,
+            "detail": "high",
+            "transfer_methods": [
+                "remote_url",
+                "local_file"
+            ]
+        }
+    }
+}
+
+
+
+Use the following context as your learned knowledge, inside <context></context> XML tags.
+
+<context>
+1.2.JAVA中的几种基本类型，各占用多少字节？
+![image](http://127.0.0.1:5001/files/fb2324df-e335-455c-864a-894304a828aa/image-preview?timestamp=1719892590&nonce=f126d356decf90e25f966e0e0017a614&sign=LQLeB9zrwSa3g_XDBU7qoJ0_BTQ2OtYViSZ96yM-LQM=)数据类型
+![image](http://127.0.0.1:5001/files/d9327d6d-1224-422b-b8b5-39b91e05c4a8/image-preview?timestamp=1719892590&nonce=f126d356decf90e25f966e0e0017a614&sign=LQLeB9zrwSa3g_XDBU7qoJ0_BTQ2OtYViSZ96yM-LQM=)
+![image](http://127.0.0.1:5001/files/9973d8c8-05bc-4d49-ad55-ce465827f700/image-preview?timestamp=1719892590&nonce=f126d356decf90e25f966e0e0017a614&sign=LQLeB9zrwSa3g_XDBU7qoJ0_BTQ2OtYViSZ96yM-LQM=)基本数据类型占字节数
+![image](http://127.0.0.1:5001/files/b479129d-bc1b-4cd2-a93d-9e9eb53726c3/image-preview?timestamp=1719892590&nonce=f126d356decf90e25f966e0e0017a614&sign=LQLeB9zrwSa3g_XDBU7qoJ0_BTQ2OtYViSZ96yM-LQM=)
+1.3.==和equals的区别是什么？
+![image](http://127.0.0.1:5001/files/8462541e-3dd3-487e-847c-85885f7524c9/image-preview?timestamp=1719892590&nonce=f126d356decf90e25f966e0e0017a614&sign=LQLeB9zrwSa3g_XDBU7qoJ0_BTQ2OtYViSZ96yM-LQM=)==用来判断两个变量的值是否相等。如果变量是基本数据类型，则直接比较；如果变量是引用类型，则比较引用内存的首地址
+1.9.String属于基础的数据类型吗？
+![image](http://127.0.0.1:5001/files/7ae4fb94-6918-4f61-83a0-e2acf671b019/image-preview?timestamp=1719892590&nonce=0f0b2b3d507aed7a6508f16cebdde7f4&sign=rc-mTecu3xrW3dWCb3YPr0sIpk8iFCCWyFBbE-UvQyA=)String不属于基础类型，基础类型有8种：byte、boolean、char、short、int、ﬂoat、long、double，而String属于对象。
+1.10.Java中操作字符串都有哪些类？它们之间有什么区别？
+![image](http://127.0.0.1:5001/files/0653cecb-138b-46e3-a6bb-8bea8fc2114a/image-preview?timestamp=1719892590&nonce=0f0b2b3d507aed7a6508f16cebdde7f4&sign=rc-mTecu3xrW3dWCb3YPr0sIpk8iFCCWyFBbE-UvQyA=)操作字符串的类有：String、StringBuﬀer、StringBuilder。
+·String和StringBuﬀer、StringBuilder的区别在于String声明的是不可变的对象，每次操作都会生成新的String对象，然后将指针指向新的String对象，而StringBuﬀer、StringBuilder可以在原有对象的基础上进行操作，所以在经常改变字符串内容的情况下最好不要使用String
+</context>
+
+When answer to user:
+- If you don't know, just say that you don't know.
+- If you don't know when you are not sure, ask for clarification.
+Avoid mentioning that you obtained the information from the context.
+And answer according to the language of the user's question.
+
+根据已知信息，回答用户问题。
+如果已知信息无法回答用户问题，则回答“我不知道”
+
+# 用户问题
+java包含哪些数据类型
+
+
+
+{
+    "id": "f380237e-6447-429d-96e4-159e274eedaf",
+    "name": "ABC",
+    "description": "",
+    "mode": "chat",
+    "icon": "\ud83e\udd16",
+    "icon_background": "#FFEAD5",
+    "enable_site": true,
+    "enable_api": true,
+    "model_config": {
+        "opening_statement": null,
+        "suggested_questions": [],
+        "suggested_questions_after_answer": {
+            "enabled": false
+        },
+        "speech_to_text": {
+            "enabled": false
+        },
+        "text_to_speech": {
+            "enabled": false
+        },
+        "retriever_resource": {
+            "enabled": false
+        },
+        "annotation_reply": {
+            "enabled": false
+        },
+        "more_like_this": {
+            "enabled": false
+        },
+        "sensitive_word_avoidance": {
+            "enabled": false,
+            "type": "",
+            "configs": []
+        },
+        "external_data_tools": [],
+        "model": {
+            "provider": "xinference",
+            "name": "qwen-chat14b-4bit",
+            "mode": "chat",
+            "completion_params": {}
+        },
+        "user_input_form": [],
+        "dataset_query_variable": null,
+        "pre_prompt": null,
+        "agent_mode": {
+            "enabled": false,
+            "strategy": null,
+            "tools": [],
+            "prompt": null
+        },
+        "prompt_type": "simple",
+        "chat_prompt_config": {},
+        "completion_prompt_config": {},
+        "dataset_configs": {
+            "retrieval_model": "single"
+        },
+        "file_upload": {
+            "image": {
+                "enabled": false,
+                "number_limits": 3,
+                "detail": "high",
+                "transfer_methods": [
+                    "remote_url",
+                    "local_file"
+                ]
+            }
+        },
+        "created_at": 1719898241
+    },
+    "created_at": 1719898241
+}

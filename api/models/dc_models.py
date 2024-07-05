@@ -88,7 +88,7 @@ class DocKeyWords(db.Model):
     __tablename__ = 'key_words'
     __table_args__ = (
         db.PrimaryKeyConstraint('id', name='key_words_pkey'),
-        db.Index('key_words_index_domain', 'key_word', 'domain', unique=True),
+        db.Index('key_words_index_domain', 'tenant_id','key_word', 'domain', unique=False),
     )
     id = db.Column(StringUUID, nullable=False,
                    server_default=db.text('uuid_generate_v4()'))
@@ -99,3 +99,13 @@ class DocKeyWords(db.Model):
     created_by = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.text('CURRENT_TIMESTAMP(0)'))
     
+class DocKeyWordsClosure(db.Model):
+    __tablename__ = 'key_words_closure'
+    __table_args__ = (
+        db.PrimaryKeyConstraint('ancestor_id','descendant_id', name='key_words_closure_pkey'),
+        db.Index('key_words_closure_index_tenant', 'tenant_id',  unique=False),
+    )
+    ancestor_id = db.Column(StringUUID, nullable=False, primary_key=True)
+    descendant_id = db.Column(StringUUID, nullable=False, primary_key=True)
+    depth = db.Column(db.Integer, nullable=False)
+    tenant_id = db.Column(StringUUID, nullable=False)

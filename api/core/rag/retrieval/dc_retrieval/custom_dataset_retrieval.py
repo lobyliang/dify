@@ -211,6 +211,7 @@ class CustomDataSetRetrieval:
                  tenant_id: Optional[str]=None,
                  top_k: Optional[int] = None,
                  score_threshold: Optional[float] = None,
+                 reranking_enable: Optional[bool] = True,
                 #  reranking_model: Optional[dict] = None
                  ) -> Optional[str]:
         if not CustomDataSetRetrieval.tenant_count:
@@ -228,7 +229,7 @@ class CustomDataSetRetrieval:
                                   'top_k':top_k,\
                                   'score_threshold':score_threshold,
                                   'score_threshold_enabled':score_threshold is not None,
-                                  'reranking_enable':True,
+                                  'reranking_enable':reranking_enable,
                                    'reranking_model': {
                                  'reranking_provider_name':CustomDataSetRetrieval.reranking_provider_name,
                                     'reranking_model_name': CustomDataSetRetrieval.reranking_model_name,

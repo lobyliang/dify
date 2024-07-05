@@ -1,34 +1,14 @@
 
 
-import argparse
-from array import array
-from dataclasses import asdict
+from email.policy import default
+import logging
 from flask_restful import Resource
-from flask import Response, json, request
-from flask_restful import Resource, marshal, reqparse
-from controllers.service_api.app.error import ProviderNotInitializeError
-from core.errors.error import LLMBadRequestError, ProviderTokenNotInitError
-from core.indexing_runner import IndexingRunner
-from core.rag.extractor.entity.extract_setting import ExtractSetting
-from models.account import Account,TenantAccountJoin
-import services
-import services.dataset_service
-from extensions.ext_database import db
-from services.dataset_service import DatasetService, DocumentService
-from models.model import  UploadFile
+from flask import Response, json
+from flask_restful import Resource, reqparse
 from controllers.service_api import api
-from controllers.service_api.dataset.error import  DocumentAlreadyFinishedError
 from controllers.service_api.wraps import DatasetApiResource
-from fields.dataset_fields import dataset_query_detail_fields
-from libs.login import current_user
-from models.dataset import Dataset, DatasetProcessRule, Document, DocumentSegment
-from services.dataset_service import DatasetService
-from werkzeug.exceptions import Forbidden, NotFound
-from fields.document_fields import (
-    document_status_fields,
-)
 from services.question_service import QuestionService
-
+from flask_restful import Resource, marshal,fields
 class CreateAppQuestionApi(Resource):
 
     def post(self, app_id):
@@ -45,30 +25,52 @@ class CreateAppQuestionApi(Resource):
             documents_ids = QuestionService.add_question(app_id,questions,tenant_id,is_virtual)
             return documents_ids,200
         except Exception as e:
-            raise e
-        
-        return {}, 200
+            logging.error(f"创建APP问题失败！for{e}")
+            return {}, 200
     
-class GetAppQuestionApi(Resource):
+AppQuestionField={
+    'id': fields.String,
+    'app_id': fields.String,
+    'questions': fields.String,
+    'status': fields.String,
+    'created_at': fields.String,
+    'is_virtual': fields.Boolean,
+}
+# MachedKeyWordsFields={
+#     fields.List(fields.Nested(MachedKeyWordsField), attribute="items")
+# }
+class GetAppQuestionApi(DatasetApiResource):
 
-    def get(self):
+    def get(self,tenant_id:str):
         argparser = reqparse.RequestParser()
         argparser.add_argument('app_id', type=str, required=False,location='json')
-        argparser.add_argument('tenant_id', type=str, required=True,location='json')
-        argparser.add_argument('status', type=str, required=False,location='json')
+        # argparser.add_argument('tenant_id', type=str, required=True,location='json')
+        argparser.add_argument('status', type=str,default=None, required=False,location='json')
+        argparser.add_argument('page_no', type=int, default=None,required=False,location='json')
+        argparser.add_argument('page_size', type=int,default=None, required=False,location='json')
         args = argparser.parse_args(strict=True)
         app_id = args['app_id']
-        tenant_id = args['tenant_id']
+        # tenant_id = args['tenant_id']
         status = args['status']
+        page_no = args['page_no']
+        page_size = args['page_size']
         try:
-            documents_ids = QuestionService.get_app_questions(tenant_id,app_id,status)
-            return Response(json.dumps([doc.to_dict() for doc in documents_ids]),status=200)
+            documents_ids,count = QuestionService.get_app_questions(tenant_id,app_id,status,page_no,page_size)
+            # return Response(json.dumps([doc.to_dict() for doc in documents_ids]),status=200)
+            return {
+                "items": marshal(documents_ids,AppQuestionField), #json.dumps([doc.to_dict() for doc in documents_ids]),
+                "size": len(documents_ids),
+                "page": page_no,
+                "pageSize": page_size,
+                "total": count,
+                "hasMore": ((page_no-1) * page_size+ len(documents_ids) )< count,
+
+            },200
         except Exception as e:
-            raise e
+            logging.error(f"查询APP问题失败！for{e}")
+            return [], 200
         
-        return [], 200
-        
-class MarchAppQuestionApi(Resource):
+class MarchAppQuestionApi(DatasetApiResource):
     #tenant_id:str,query:str,top_k:int=20,score_threshold:float=0.3
     def post(self,tenant_id:str):
         argparser = reqparse.RequestParser()
@@ -81,4 +83,4 @@ class MarchAppQuestionApi(Resource):
     
 api.add_resource(CreateAppQuestionApi, '/appQuestion/<string:app_id>/create')    
 api.add_resource(GetAppQuestionApi, '/appQuestion/list') 
-api.add_resource(MarchAppQuestionApi, '/appQuestion/<string:tenant_id>/march')
+api.add_resource(MarchAppQuestionApi, '/appQuestion/march')

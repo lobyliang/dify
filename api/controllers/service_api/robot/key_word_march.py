@@ -1,81 +1,142 @@
 
 
-import argparse
-from array import array
-from dataclasses import asdict
 import logging
-from flask_restful import Resource
-from flask import Response, json, jsonify, request
-from flask_restful import Resource, marshal, reqparse
-from controllers.service_api.app.error import ProviderNotInitializeError
-from core.errors.error import LLMBadRequestError, ProviderTokenNotInitError
-from core.indexing_runner import IndexingRunner
-from core.rag.extractor.entity.extract_setting import ExtractSetting
-from models.account import Account,TenantAccountJoin
-from models.dc_models import DocKeyWords, DocKeyWordsClosure
-import services
-import services.dataset_service
-from extensions.ext_database import db
-from services.dataset_service import DatasetService, DocumentService
-from models.model import  UploadFile
+from flask import jsonify
+from flask_restful import marshal,fields, reqparse
+from fields import dataset_fields
+from fields import document_fields
+from libs.helper import TimestampField
 from controllers.service_api import api
-from controllers.service_api.dataset.error import  DocumentAlreadyFinishedError
 from controllers.service_api.wraps import DatasetApiResource
-from fields.dataset_fields import dataset_query_detail_fields
+from fields.dataset_fields import dataset_fields
 from libs.login import current_user
-from models.dataset import Dataset, DatasetProcessRule, Document, DocumentSegment
-from services.dataset_service import DatasetService
-from werkzeug.exceptions import Forbidden, NotFound
 from fields.document_fields import (
-    document_status_fields,
+    document_fields
 )
-
+from services.key_word_service import KeyWordService
+def parse_list_of_dicts(value):
+    try:
+        return value
+    except Exception as e:
+        raise ValueError('Invalid list of dictionaries'+{e})
+    
 class AddKeyWordApi(DatasetApiResource):
     def post(self, tenant_id):
         parser = reqparse.RequestParser()
-        parser.add_argument('key_words', type=list[dict], required=True, help='key_word is required')
+        # parser.add_argument('key_words', type=list,action='append',required=True, help='key_word is required')
+        parser.add_argument('key_words', type=parse_list_of_dicts,required=True,location='json', help='key_word is required')
         parser.add_argument('ancestor_id', type=str, required=False)
         parser.add_argument('creator', type=str, required=False)
         args = parser.parse_args()
         ancestor_id = args.get('ancestor_id')
         key_words = args.get('key_words')
-        ancestor_key_word = None
-        domain = None
-        key_words_list = []
+        creator = args.get('creator')
         try:
-            if ancestor_id:
-                ancestor_key_word = db.session.query(DocKeyWords).filter_by(id=ancestor_id).one_or_none()
-            if ancestor_key_word:
-                domain = ancestor_key_word.domain
-            else:
-                return jsonify(code=400, message='ancestor_id is not exist')
-            for key_word in key_words:
-                key_word_obj = DocKeyWords(key_word=key_word["key_word"],\
-                                        category=key_word["category"],\
-                                            tenant_id=tenant_id,domain=domain)
-                key_words_list.append(key_word_obj)
-                db.session.add(key_word_obj)
-            db.session.commit()
-            if ancestor_id:
-                ancestor_closure = db.session.query(DocKeyWordsClosure).filter(DocKeyWordsClosure.descendant_id == ancestor_id).one_or_none()
-                depth=0
-                if ancestor_closure:
-                    depth = ancestor_closure.depth + 1
-                for key_word in key_words_list:
-                    key_word_obj = DocKeyWordsClosure(ancestor_id=ancestor_id,\
-                                            descendant_id=key_word.id,\
-                                            depth=depth)
-                    db.session.add(key_word_obj)
-                db.session.commit()
-            
-            return jsonify(code=200, message='success')
+            KeyWordService.AddKeyWord(tenant_id,key_words,creator,ancestor_id)
+            return jsonify(code=200, message="success")
         except Exception as e:
-            db.session.rollback()
             logging.error(e)
             return jsonify(code=500, message=str(e))
+        
+DocKeyWordFields={
+    'id': fields.String,
+    'key_word': fields.String,
+    'category': fields.String,
+    'domain': fields.String,
+    'created_by': fields.String,
+    'created_at': TimestampField,
+    'tenant_id': fields.String,
+}
+DocKeyWordsFields={
+    fields.List(fields.Nested(DocKeyWordFields), attribute="items")
+}
+
+MachedKeyWordsField={
+    'index': fields.Integer,
+    'text': fields.String,
+    'score': fields.Float,
+}
+MachedKeyWordsFields={
+    fields.List(fields.Nested(MachedKeyWordsField), attribute="items")
+}
+class GetKeyWordsApi(DatasetApiResource):        
+    def get(self, tenant_id,ancestor_id:str):
+
+        try:
+            depth,parent,key_words = KeyWordService.GetKeyWord(tenant_id,ancestor_id)
+        except Exception as e:
+            logging.error(e)
+            return jsonify(code=500, message=str(e))
+        return {"depth":depth,"parent":marshal(parent,DocKeyWordFields),"keywords":marshal(key_words,DocKeyWordFields)},200
 
 
+    def post(self, tenant_id,ancestor_id:str):
+        try:
+            parser = reqparse.RequestParser()
+            parser.add_argument('paragraph', type=list,location='json',required=True, help='Paragraph is required')
+            parser.add_argument('score_threshold', type=float,location='json',required=False, help='score_threshold is required')
+            parser.add_argument('top_n', type=int,location='json',required=False, help='top_n is required')
+            parser.add_argument('debug', type=bool,location='json',required=False, help='显示命中的是那一句话')
+            args = parser.parse_args()
+            paragraphs = args.get('paragraph')
+            score_threshold = args.get('score_threshold')
+            top_n = args.get('top_n')
+            isDebug = args.get('debug')
+            ret = {}
+            
+            if len(paragraphs)==0:
+                return jsonify(code=200, message="success",data=[])
+        
+            # ret = KeyWordService.MarhKeyWords(paragraphs,tenant_id,ancestor_id,score_threshold,top_n)
+            ret2 = KeyWordService.MarhAllKeyWords(paragraphs,tenant_id,current_user.id,ancestor_id,score_threshold,top_n,isDebug)
+            ret2 = sorted(ret2.items(), key=lambda x: (x[1]['total_score'],x[1]['max_score']), reverse=True)
+            return ret2
+        except Exception as e:
+            logging.error(e)
+            return jsonify(code=500, message=str(e))
+    
+class GetKeyWordsByTagApi(DatasetApiResource):        
+    def get(self, tenant_id):
+        try:
+            parser = reqparse.RequestParser()
+            parser.add_argument('domain', type=str,location='args',required=False, help='domain of the key word')
+            parser.add_argument('keyword', type=str,location='args',required=True, help='domain of the key word')
+            args = parser.parse_args()
+            domain = args.get('domain')
+            key_word = args.get('keyword')
+            key_words = KeyWordService.GetKeyWords(tenant_id,key_word,domain)
+            return marshal(key_words,DocKeyWordFields),200
+        except Exception as e:
+            logging.error(e)
+            return jsonify(code=500, message=str(e))
+        
+class BuildKeyWordsRAGApi(DatasetApiResource):
+    def post(self,tenant_id): 
+        try:
+            parser = reqparse.RequestParser()
+            parser.add_argument('prefix', type=str, required=True)
+            parser.add_argument('suffix', type=str, required=True)
+            parser.add_argument('domain', type=str, required=True)
+            parser.add_argument('top_k', type=int, required=False)
+            parser.add_argument('score_threshold', type=int, required=False)
+            parser.add_argument('rebuild', type=bool, required=False,default=False)
+            args = parser.parse_args()
+            domain = args.get('domain')
+            prefix = args.get('prefix')
+            suffix = args.get('suffix')
+            top_k = args.get('top_k')
+            rebuild = args.get('rebuild')
 
-# api.add_resource(CreateAppQuestionApi, '/appQuestion/<string:app_id>/create')    
+            score_threshold = args.get('score_threshold')
+            dataset,document,count = KeyWordService.BuildKeyWordsRAG(tenant_id,domain,prefix,suffix,current_user,top_k,score_threshold,rebuild)
+            return {'dataset':marshal(dataset,dataset_fields),'document':marshal(document,document_fields),'count':count}
+        except Exception as e:    
+            logging.error(e)
+            return {'message':str(e)},500
+
+api.add_resource(AddKeyWordApi, '/keywords')  
+api.add_resource(GetKeyWordsByTagApi, '/keywords/search')  
+api.add_resource(GetKeyWordsApi, '/keywords/<string:ancestor_id>') 
+api.add_resource(BuildKeyWordsRAGApi, '/keywords/build') 
 # api.add_resource(GetAppQuestionApi, '/appQuestion/list') 
 # api.add_resource(MarchAppQuestionApi, '/appQuestion/<string:tenant_id>/march')

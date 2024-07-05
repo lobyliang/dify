@@ -74,6 +74,29 @@ def upgrade():
     with op.batch_alter_table('messages', schema=None) as batch_op:
         batch_op.add_column(sa.Column('cmd', sa.String(length=24), nullable=True))
 
+    op.create_table('key_words',
+    sa.Column('id', sa.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+    sa.Column('key_word', sa.String(length=64), nullable=False),
+    sa.Column('category', sa.String(length=255), nullable=True),
+    sa.Column('domain', sa.String(length=255), nullable=True),
+    sa.Column('tenant_id', sa.UUID(), nullable=False),
+    sa.Column('created_by', sa.String(length=255), nullable=True),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP(0)'), nullable=False),
+    sa.PrimaryKeyConstraint('id', name='key_words_pkey')
+    )
+    with op.batch_alter_table('key_words', schema=None) as batch_op:
+        batch_op.create_index('key_words_index_domain', ['tenant_id','domain','key_word'], unique=False)
+
+    op.create_table('key_words_closure',
+    sa.Column('ancestor_id', sa.UUID(), nullable=False),
+    sa.Column('descendant_id', sa.UUID(), nullable=False),
+    sa.Column('depth', sa.Integer(), nullable=False),
+    sa.Column('tenant_id', sa.UUID(), nullable=False),
+    sa.PrimaryKeyConstraint('ancestor_id','descendant_id', name='key_words_closure_pkey')
+    )
+    with op.batch_alter_table('key_words_closure', schema=None) as batch_op:
+        batch_op.create_index('key_words_closure_index_tenant', ['tenant_id'], unique=False)
+
     # ### end Alembic commands ###
 
 
@@ -103,4 +126,6 @@ def downgrade():
 
     op.drop_table('app_questions')
     op.drop_table('app_category')
+    op.drop_table('key_words')
+    op.drop_table('key_words_closure')
     # ### end Alembic commands ###
