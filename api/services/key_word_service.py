@@ -1,27 +1,21 @@
 
 # 用于根据问题选择合适的App或者机器人
 import re
-import uuid
-from flask import current_app, json
-from flask_restful import marshal
-from pyparsing import Keyword
+from flask import current_app
 from sqlalchemy import distinct, text
 from controllers.service_api.app.error import ProviderModelCurrentlyNotSupportError, ProviderNotInitializeError, ProviderQuotaExceededError
 from core.errors.error import ModelCurrentlyNotSupportError, ProviderTokenNotInitError, QuotaExceededError
 from core.model_manager import ModelManager
-from core.model_runtime.entities.message_entities import SystemPromptMessage, UserPromptMessage
 from core.model_runtime.entities.model_entities import ModelType
-from core.rag.datasource.vdb.dc_vector_factory import DCVector
-from core.rag.models.document import Document
 from core.rag.retrieval.dc_retrieval.custom_dataset_retrieval import CustomDataSetRetrieval
 from models.model import App
 from models.account import Account
 from models.dataset import AppDatasetJoin, Dataset
-from models.dc_models import AppQuestions, DocKeyWords, DocKeyWordsClosure
+from models.dc_models import DocKeyWords, DocKeyWordsClosure
 from extensions.ext_database import db
-from services.dataset_service import DatasetService, DocumentService, SegmentService
+from services.dataset_service import DatasetService, DocumentService
 from services.file_service import FileService
-from tasks.dc_add_app_question_index_task import dc_add_app_question_index_task
+from tasks.create_key_words_index_task import key_word_indexing_task
 import logging
 
 
@@ -249,7 +243,7 @@ class KeyWordService:
             root_id = KeyWordService.GetDomainRoot(tenant_id,domain)
             if root_id is None:
                 return
-            leafs = KeyWordService.GetAllLeafs(tenant_id,root_id)
+            # leafs = KeyWordService.GetAllLeafs(tenant_id,root_id)
             name = KeyWordService.getDefaultDataSetName(domain)
             description = f"存储了关于《{domain}》的关键字知识库"
             dataset = db.session.query(Dataset).filter(Dataset.tenant_id == tenant_id,Dataset.name == name).one_or_none()
@@ -371,15 +365,18 @@ class KeyWordService:
 
             try:
                 documents, batch = DocumentService.save_document_with_dataset_id(dataset, args, account)
-                for keyword in leafs:
-                    arg={
-                    "content": f"{prefix}{keyword.category}/{keyword.key_word}{suffix}",
-                    "answer": keyword.key_word if not keyword.category else f"{keyword.category}-{keyword.key_word}",
-                    "keywords": [
-                        keyword.key_word,keyword.category
-                    ]
-                    }
-                    SegmentService.create_segment(arg,documents[0],dataset)
+
+                leafs = KeyWordService.GetAllLeafs(tenant_id,root_id)
+                key_word_indexing_task.dely(tenant_id,dataset.id,documents[0].id,root_id,prefix,suffix)
+                # for keyword in leafs:
+                #     arg={
+                #     "content": f"{prefix}{keyword.category}/{keyword.key_word}{suffix}",
+                #     "answer": keyword.key_word if not keyword.category else f"{keyword.category}-{keyword.key_word}",
+                #     "keywords": [
+                #         keyword.key_word,keyword.category
+                #     ]
+                #     }
+                #     SegmentService.create_segment(arg,documents[0],dataset)
             except ProviderTokenNotInitError as ex:
                 raise ProviderNotInitializeError(ex.description)
             except QuotaExceededError:
@@ -395,6 +392,23 @@ class KeyWordService:
         except Exception as e:
             logging.error(e)
             raise e
+        
+# 匹配关键字提示词
+# # 角色
+# - 将给定简历匹配到<keywords>标签中的可选关键字
+# - 给每个匹配到的关键字打个分，取值0~100分
+# - 直接给出关键字和得分，不要进行评价和说明
+# - 只能从<keywords>标签中选择关键字
+# # 格式要求
+# 关键字:分值
+# # 可选关键字
+# <keywords>
+# 后端开发/java开发
+# 后端开发/.net开发
+# 后端开发/大数据开发
+# </keywords>
+# # 简历  
+# ● 熟练使用 Java 语言开发，具有良好的编码规范\n● 熟悉基于 SSM、SpringBoot 框架开发\n● 熟悉 Mysql、Oracle 数据库\n● 熟练使用 IDEA、Git、PostMan、PLSQL、Maven 等开发工具\n● 熟悉 Linux 系统日志排查、文件操作等常用命令\n● 了解 SpringCloud、Dubbo ，以及 Redis、RabbitMQ、Zookeeper 的中间件使用\n● 了解 HTML、CSS、Js、Ajax、Freemarker、Vue\n● 了解 JIRA、SVN 的使用\n● 了解基于 Activiti 工作流开发\n工作经历\n杭州财人汇网络股份有限公司武汉分公司 Java 2021.07-2022.12\n1.根据项目立项情况，参与需求评审，结合项目需求提出开发建议，会后整理评审结果，制定开发计划，确立项目开发实施\n方案，并制定相应的开发文档。\n2.根据开发文档，独立负责项目中后端接口的开发，制定接口文档，设计数据库表字段及相应索引，结合接口文档完成接口\n开发及自测工作。\n3.联调前端及其他业务部门，并实时跟进业务开发进度。\n4,配合测试部门完成测试及上线工作，对测试提出的问题进行相应的修改。\n5.负责生产环境遇到的问题进行排查定位，并进行修复升级。\n项目经历\n企业版网掌厅 Java开发 2021.07-2022.12\n项目使用的技术：SpringBoot、SpringCloud、Dubbo、Redis、ActiveMQ、MyBatisPlus、Gradle、Activiti、Oracle\n开发工具：IDEA、Git、PLSQL、PostMan、Xshell、Xftp、SVN.\n项目简介：该项目采用前后端分离的分布式架构开发，主要是为已开户的客户提供证券业务办理。\n项目主要分为4 大模块：柜台模块、业务模块、工作流模块、后台管理模块，柜台接口服务模块和工作流模块是服务提供\n方，业务模块是服务的消费方，采用 Dubbo 进行远程调用，项目开发环境使用了 Nacos 做服务的注册中心和配置中心,使\n用 mq 实现短信的功能的实现，使用 redis 分布式锁解决生产上手机信息修改和基本信息修改流程并发调用修改接口导致\n修改重置的问题。\n1. 柜台模块主要对接各个券商的柜台系统，对接各个券商的柜台系统是通过自定义配置和自定义注解的方式通过反射使对\n接柜台接口的调用统一化处理。\n2. 业务产品模块主要是对业务功能的具体实现。\n3. 工作流模块主要是工作流核心代码实现以及业务相关的工作流程配置文件开发。\n4. 后台模块主要用于流程文件的编写，短信发送信息查看，排查生产问题相关信息的获取，视频认证，协议模板的设置\n等，该项目的主要作用用于券商方面的后台管理，权限检查等网上购物 Java开发 2021.01-2021.06\n该项目是一个综合性平台，类似京东商城，天猫商城。用户可在该系统查看商品，添加购物车，以及在购物车进行付款，\n管理员，运营可以在平台后台管理系统中管理商品，订单等。客服可以在后台管理系统中处理用户的询问以及投诉.\n使用的技术有 Spring,springMVC,Mybatis等.其中控制层采用 springMVC 框架开发；业务逻辑层封装业务流程,为适应业\n务的变更,每一业务模块均有专门的接口及实现类.\n利用 Spring的 IOC 功能将实现类注入到容器中；数据访问层借助于 mybatis 实现,代码简洁，适应不同的数据库.事务部分\n利用 Spring 的声明式事务管理.同时使用 http 协议传递 json 数据方式实现.这样及降低了系统之间的耦合度,又提高了系统\n的扩展性。为了提高系统的性能使用 redis 做某一些业务的缓存（点赞，购物车信息）.\n该项目主要包括以下模块：\n● 后台管理系统：管理商品，订单，类目，商品规格属性，用户管理等功能。\n● 前台系统：用户可以在前台系统中进行注册，登录，浏览商品，下单等操作。\n● 购物车系统：用户可以在首页目录发现中意的商品可添加至购物车，企业可进行清空，删除，付款等功能。\n● 订单系统：提供下单，查询订单，修改订单状态，定时处理订单。\n● 搜索系统：提供商品价格的搜索功能。        
     @staticmethod
     def MarhAllKeyWords(paragraphs:list,tenant_id:str,user_id:str,ancestor_id:str,score_threshold=0.2,top_n=10,debug=True):
         ret = {}

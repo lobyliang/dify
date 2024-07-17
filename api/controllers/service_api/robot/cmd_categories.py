@@ -57,5 +57,6 @@ class CmdCategories(Resource):
             logging.exception("internal server error.")
             raise InternalServerError()
 
+
 api.add_resource(CmdCategories, '/chat_robot/categories/')
 

@@ -118,7 +118,12 @@ site_fields = {
     'prompt_public': fields.Boolean,
     'app_base_url': fields.String,
 }
-
+##############lobyliang####################
+app_questions_fields={
+    'id':fields.String,
+    'questions':fields.String,
+}
+#######################################
 app_detail_fields_with_site = {
     'id': fields.String,
     'name': fields.String,
@@ -133,6 +138,14 @@ app_detail_fields_with_site = {
     'api_base_url': fields.String,
     'created_at': TimestampField,
     'deleted_tools': fields.List(fields.String),
+    #############lobyliang####################
+    'cmd':fields.String,
+    'category':fields.String,
+    'func_name':fields.String,
+    'is_robot':fields.Boolean,
+    'chat_icon':fields.String,
+    'questions':fields.Nested(app_questions_fields, attribute='questions'),
+    ############################################3
 }
 
 app_site_fields = {

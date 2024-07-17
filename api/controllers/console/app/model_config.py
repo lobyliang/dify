@@ -2,8 +2,8 @@ import json
 
 from flask import request
 from flask_login import current_user
-from flask_restful import Resource
-
+from flask_restful import Resource,reqparse
+from services.question_service import QuestionService
 from controllers.console import api
 from controllers.console.app.wraps import get_app_model
 from controllers.console.setup import setup_required
@@ -14,11 +14,40 @@ from core.tools.utils.configuration import ToolParameterConfigurationManager
 from events.app_event import app_model_config_was_updated
 from extensions.ext_database import db
 from libs.login import login_required
-from models.model import AppMode, AppModelConfig
+from models.dc_models import AppQuestions
+from models.model import App, AppMode, AppModelConfig
 from services.app_model_config_service import AppModelConfigService
-
+from werkzeug.exceptions import NotFound
 
 class ModelConfigResource(Resource):
+
+    @staticmethod
+    def _get_app(app_id, mode=None):
+        app = db.session.query(App).filter(
+        App.id == app_id,
+        App.tenant_id == current_user.current_tenant_id,
+        App.status == 'normal'
+    ).first()
+
+        if not app:
+            raise NotFound("App not found")
+
+        if mode and app.mode != mode:
+            raise NotFound("The {} app not found".format(mode))
+
+        return app
+    @staticmethod
+# 查询app——questions对象，如果没有，返回一个新对象
+    def _get_app_questions(app_id):
+        app_questions = db.session.query(AppQuestions).filter(
+            AppQuestions.app_id == app_id,
+        ).first()
+
+        if app_questions is None:
+            app_questions = AppQuestions(
+                app_id = app_id,
+            )
+        return app_questions
 
     @setup_required
     @login_required
@@ -26,6 +55,43 @@ class ModelConfigResource(Resource):
     @get_app_model(mode=[AppMode.AGENT_CHAT, AppMode.CHAT, AppMode.COMPLETION])
     def post(self, app_model):
         """Modify app model config"""
+
+#------------------------------------------------------------
+        app_id = app_model.id
+        app = ModelConfigResource._get_app(app_id)
+        parser = reqparse.RequestParser()
+        parser.add_argument('setting', type=dict, location='json')
+        args = parser.parse_args()
+
+        functionSettings = args['setting']
+        if functionSettings is not None:
+            if 'cmd' in functionSettings:
+                app.cmd = functionSettings['cmd']
+            if 'category' in functionSettings:
+                app.category = functionSettings['category']
+            if 'func_name' in functionSettings:
+                app.func_name = functionSettings['func_name']
+            if 'is_robot' in functionSettings:
+                app.is_robot = functionSettings['is_robot']
+            if 'chat_icon' in functionSettings:
+                app.chat_icon = functionSettings['chat_icon']
+
+            # 保存问题列表            
+            if 'match_list' in functionSettings:
+                fun_match_list= functionSettings['match_list']
+                if fun_match_list is not None:
+                    QuestionService.update_app_question(tenant_id=current_user.current_tenant_id,questions=fun_match_list,app_id=app_id)
+                    # app_questions = ModelConfigResource._get_app_questions(app_id)
+                    # if isinstance(fun_match_list,list):
+                    #     question_str = '\n'.join(fun_match_list)
+                    # else:
+                    #     question_str = fun_match_list
+                    # if question_str:
+                    #     app_questions.questions = question_str
+                    #     db.session.add(app_questions)
+        
+#------------------------------------------------------------
+#         
         # validate config
         model_configuration = AppModelConfigService.validate_configuration(
             tenant_id=current_user.current_tenant_id,

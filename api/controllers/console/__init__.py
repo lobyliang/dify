@@ -26,6 +26,7 @@ from .app import (
     workflow_app_log,
     workflow_run,
     workflow_statistic,
+    dr_cmd_category,
 )
 
 # Import auth controllers

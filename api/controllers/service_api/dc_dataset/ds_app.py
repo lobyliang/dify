@@ -4,6 +4,7 @@ from flask_restful import marshal_with, reqparse
 import flask_restful
 from controllers.console.app.app import ALLOW_CREATE_APP_MODES
 from controllers.console.app.wraps import get_app_model
+from models.dataset import AppDatasetJoin
 from services.app_service import AppService
 
 
@@ -128,7 +129,7 @@ class RAGAppInfoApi(DatasetApiResource):
 
     @get_app_model
     @marshal_with(app_detail_fields_with_site)
-    def put(self, app_model):
+    def put(self,tenant_id, app_model):
         """Update app"""
         parser = reqparse.RequestParser()
         parser.add_argument('name', type=str, required=True, nullable=False, location='json')
@@ -144,13 +145,19 @@ class RAGAppInfoApi(DatasetApiResource):
 
 
     @get_app_model
-    def delete(self, app_model):
+    def delete(self,tenant_id, app_model):
         """Delete app"""
         if not current_user.is_admin_or_owner:
             raise Forbidden()
 
         app_service = AppService()
         app_service.delete_app(app_model)
+        try:
+            db.session.query(AppDatasetJoin).filter(AppDatasetJoin.app_id == app_model.id).delete()
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return {'result': 'failed', 'message': str(e)}, 400
 
         return {'result': 'success'}, 204    
     

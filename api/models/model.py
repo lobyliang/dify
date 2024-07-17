@@ -12,6 +12,7 @@ from core.file.tool_file_parser import ToolFileParser
 from core.file.upload_file_parser import UploadFileParser
 from extensions.ext_database import db
 from libs.helper import generate_string
+from models.dc_models import AppQuestions
 
 from . import StringUUID
 from .account import Account, Tenant
@@ -124,7 +125,13 @@ class App(db.Model):
     def tenant(self):
         tenant = db.session.query(Tenant).filter(Tenant.id == self.tenant_id).first()
         return tenant
-
+    
+    ########lobyliang#############
+    @property
+    def questions(self):
+        questions = db.session.query(AppQuestions).filter(AppQuestions.app_id == self.id).all()
+        return questions
+    ##################################33
     @property
     def is_agent(self) -> bool:
         app_model_config = self.app_model_config

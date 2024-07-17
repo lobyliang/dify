@@ -2,16 +2,18 @@
 # 用于根据问题选择合适的App或者机器人
 import time
 from flask import json
+from sqlalchemy import exists
 from core.model_manager import ModelManager
 from core.model_runtime.entities.message_entities import SystemPromptMessage, UserPromptMessage
 from core.model_runtime.entities.model_entities import ModelType
 from core.rag.datasource.vdb.dc_vector_factory import DCVector
 from core.rag.models.document import Document
-from models import model
 from models.dc_models import AppQuestions
 from extensions.ext_database import db
 from tasks.dc_add_app_question_index_task import dc_add_app_question_index_task
 import logging
+
+from tasks.delete_app_questions_task import dc_delete_app_questions_task
 
 def next_name(s:str):
     result = []
@@ -37,6 +39,42 @@ def next_name2(name:str):
 
 class QuestionService:
     @staticmethod
+    def delete_app_question(tenant_id:str,doc_ids:list,app_id:str=None):
+        try:
+            if doc_ids:
+                # db.session.query(AppQuestions).filter(AppQuestions.id.in_(doc_ids)).delete(synchronize_session=False)
+                db.session.bulk_update_mappings(AppQuestions, [{'id':doc_id,'status': 'deleted'} for doc_id in doc_ids])
+                db.session.commit()
+            elif app_id:
+                questions = db.session.query(AppQuestions).filter(AppQuestions.app_id==app_id,AppQuestions.tenant_id==tenant_id).all()
+                db.session.bulk_update_mappings(AppQuestions, [{'id':question.id,'status': 'deleted'} for question in questions])
+                db.session.commit()
+        except Exception as e:
+            logging.exception(f"删除App问题 failed:{e}")
+        dc_delete_app_questions_task.delay(tenant_id)
+        
+    @staticmethod
+    def update_app_question(tenant_id:str,questions: list[str],app_id:str,is_virtual: bool = False):
+        try:
+            if not app_id:
+                raise Exception('app_id不能为空')
+            old_questions = db.session.query(AppQuestions).filter(AppQuestions.app_id==app_id,AppQuestions.tenant_id==tenant_id).all()
+            exists_questions = [] #已存在，不用更新的
+            delete_questions = [] #需要删除的问题
+            for question in old_questions:
+                if question.questions in questions:
+                    questions.remove(question.questions) # 删除已经存在的问题
+                    exists_questions.append(question)
+                else:
+                    delete_questions.append(question) # 需要删除的问题
+            # questions列表中，不存在于exists_questions中的，即要新增的
+            new_questions = [question for question in questions if question not in exists_questions]
+            QuestionService.add_question(app_id=app_id, questions=new_questions, tenant_id=tenant_id,is_virtual=is_virtual)
+            QuestionService.delete_app_question(tenant_id=tenant_id,doc_ids=[question.id for question in delete_questions],app_id=app_id)
+        except Exception as e:
+            logging.exception(f"更新App问题 failed:{e}")
+
+    @staticmethod
     def add_question(app_id: str, questions: list[str], tenant_id: str,is_virtual: bool = False) -> None:
         """
         添加问题
@@ -56,11 +94,13 @@ class QuestionService:
                 elif one_query.status=='indexing':
                     all_questions.append(one_query)
                 else:
-                    logging.warning(f'{app_id} : {question} 已经索引完成，无需再次索引')
+                    logging.warning(f'{app_id} : [\'{question}\']已经索引完成，无需再次索引')
             if len(all_questions)>0:
                 db.session.commit()
                 documents_ids = [question.id for question in all_questions]
-                dc_add_app_question_index_task.delay(documents_ids,tenant_id,app_id)
+            else:
+                documents_ids = []
+            dc_add_app_question_index_task.delay(documents_ids,tenant_id,app_id)
             return [str(doc_id) for doc_id in  documents_ids],len(all_questions)
         except Exception as e:
             logging.exception(f"App问题索引任务 failed:{e}")
@@ -76,20 +116,25 @@ class QuestionService:
         :return:
         """
         try:
-            count = db.session.query(AppQuestions).filter(AppQuestions.tenant_id==tenant_id).count()
+            count_query = db.session.query(AppQuestions).filter(AppQuestions.tenant_id==tenant_id)
             query = db.session.query(AppQuestions).filter(AppQuestions.tenant_id==tenant_id)
             if app_id:
                 query = query.filter(AppQuestions.app_id==app_id)
+                count_query = count_query.filter(AppQuestions.app_id==app_id)
             
             if status:
                 query = query.filter(AppQuestions.status==status)
+                count_query = count_query.filter(AppQuestions.status==status)
+            # else:
+                # query = query.filter(AppQuestions.status=='completed')
+            count = count_query.count()
             
             if page_no and page_size:
                 query = query.offset((page_no - 1) * page_size).limit(page_size)
             app_questions =query.all()
             return app_questions,count
         except Exception as e:
-            logging.exception(f"查询App问题 failed:{e}")        
+            logging.exception(f"查询App问题 failed:{e}")
         return [],0
         
     @staticmethod
@@ -154,8 +199,7 @@ class QuestionService:
                         max_score = doc.metadata['score']
                         max_score_app_id = app_id
 
-                
-            
+
                 if max_count_app_id != max_score_app_id:
                     # 说明判断的结果存在风险
                     recommend = 1

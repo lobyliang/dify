@@ -1,0 +1,25 @@
+model: tts
+model_type: tts
+model_properties:
+  default_voice: 'zhishuo'
+  voices:
+    - mode: 'zhishuo'
+      name: '知硕（普通话男声 客服数字人）'
+      language: ['zh-Hans', 'en-US']
+    - mode: 'zhibing_emo'
+      name: '知冰_多情感（多种情感男声 通用场景）'
+      language: ['zh-Hans', 'en-US']
+    - mode: 'zhixiaoxia'
+      name: '知小夏（普通话女声 对话数字人）'
+      language: ['zh-Hans', 'en-US']
+    - mode: 'sijia'
+      name: '思佳（标准女声 通用场景）'
+      language: ['zh-Hans', 'en-US']
+  word_limit: 280
+  audio_type: 'mp3'
+  max_workers: 2
+pricing:
+  input: '1'
+  output: '0'
+  unit: '0.00333'
+  currency: RMB

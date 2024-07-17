@@ -2,8 +2,8 @@ import threading
 from typing import Optional
 
 from flask import Flask, current_app
-
-from core import model_manager
+from sqlalchemy import  text
+from core import model_manager, rag
 from core.app.app_config.entities import DatasetRetrieveConfigEntity
 from core.app.entities.app_invoke_entities import InvokeFrom, ModelConfigWithCredentialsEntity
 from core.callback_handler.index_tool_callback_handler import DatasetIndexToolCallbackHandler
@@ -603,15 +603,248 @@ class CustomDataSetRetrieval:
                     all_documents.extend(documents)  
 
     @staticmethod
-    def comment_rag_query(query_id:str,like:int):
-        is_like = 1 if like == 1 else 0
-        is_dislike = 1 if like == 0 else 0
+    # 1就是点赞，-1就是点踩，0就是取消点赞和点踩
+    def comment_rag_query(query_id:str,seg_id:str,rate:float,like:str):
+        # is_like = 1 if like == 1 else 0
+        # is_dislike = 1 if like == 0 else 0
+        is_like = 0
+        if like == 'dislike':
+            is_like = -1
+        elif like == 'like':
+            is_like = 1
+
         rag_query = db.session.query(DatasetQuery).filter(
             DatasetQuery.id == query_id
         ).first()
         if not rag_query:
             raise ValueError("query not found")
-        rag_query.like = rag_query.like + is_like,
-        rag_query.dislike=rag_query.dislike + is_dislike
+        
+        seg_ids = rag_query.seg_ids
+        if not seg_ids:
+            seg_ids = {}
+        # if seg_id in seg_ids:
+        #     seg_ids[seg_id]['rate'] = rate
+        #     seg_ids[seg_id]['like'] = like
+        # else:
+        
+        if is_like == 0:
+            if seg_id in seg_ids:
+                rag_query.like = rag_query.like - seg_ids[seg_id]['like']
+                seg_ids.pop(seg_id)
+        else:
+            rag_query.like = rag_query.like + is_like
+            seg_ids[seg_id]={'rate':rate,'like':is_like,}
+        rag_query.seg_ids = seg_ids
+        db.session.bulk_update_mappings(DatasetQuery, [{'id':query_id,'like': rag_query.like,'seg_ids':rag_query.seg_ids} ])
+        db.session.flush()
+        # rag_query.dislike=rag_query.dislike + is_dislike
         db.session.commit()
-        return {"like":rag_query.like,"dislike":rag_query.dislike}
+        return  #{"like":rag_query.like,"dislike":rag_query.dislike}
+    
+    @staticmethod
+    # 查询所有查询记录的查询次数和点赞次数
+    def dataset_comment_list(dataset_id:str,page_no:int,page_size:int):
+        likes_summary = (
+        db.session.query(
+            DatasetQuery.content,
+            db.func.max(DatasetQuery.created_at).label('last_date'),
+            db.func.count(DatasetQuery.content).label('count'),
+            db.func.sum(db.case((DatasetQuery.like > 0, DatasetQuery.like), else_=0)).label('total_likes'),
+            db.func.sum(db.case((DatasetQuery.like < 0, DatasetQuery.like), else_=0)).label('total_dislikes')
+        )
+        .filter(DatasetQuery.dataset_id == dataset_id)
+        .group_by(DatasetQuery.content)
+        .subquery())
+
+        query = db.session.query(
+            likes_summary.c.content,
+            likes_summary.c.count,
+            likes_summary.c.total_likes,
+            likes_summary.c.total_dislikes,
+            likes_summary.c.last_date,
+        ).order_by(likes_summary.c.total_likes.desc(),likes_summary.c.last_date.desc())\
+        .offset((page_no - 1) * page_size).limit(page_size)
+        total_count = db.session.query(
+            DatasetQuery.content
+            ).filter(DatasetQuery.dataset_id == dataset_id).group_by(DatasetQuery.content).count()
+
+        result = query.all()
+        result = [
+            {
+                'content': row[0],
+                'count': row[1],
+                'total_likes': row[2],
+                'total_dislikes': row[3],
+                'last_date': row[4].strftime('%Y-%m-%d %H:%M:%S') if row[4] else None,
+            }
+            for row in result
+        ]
+        result = {
+            'total_count': total_count,
+            'data': result,
+            'page_no': page_no,
+            'page_size': page_size,
+            'hasMore': total_count > page_no * page_size,
+        }
+        
+        return result
+
+  
+    @staticmethod
+    # 查询所有查询记录的查询次数和点赞次数
+    def document_comment_list_in_dataset(dataset_id:str,page_no:int,page_size:int):
+        # 构建子查询 seg_data
+        # seg_data_subquery = (
+        #     db.select(
+        #         DatasetQuery.id,
+        #         DatasetQuery.content,
+        #         DatasetQuery.seg_ids,
+        #         db.func.json_each_text(DatasetQuery.seg_ids).label('seg_data')
+        #     )
+        #     .where(DatasetQuery.dataset_id == '645f3f81-af00-420f-a5cd-e67fb25f1386')
+        #     .order_by(DatasetQuery.created_at)
+        #     .cte('seg_data')
+        # )
+
+        # # 构建子查询 seg_likes
+        # seg_likes_subquery = (
+        #     db.select(
+        #         seg_data_subquery.c.content,
+        #         db.func.text("(seg_data).key").label('seg_id'),
+        #         db.cast(db.func.text("(seg_data).value::json->>'like'"), db.Integer).label('like_value'),
+        #         # db.func.json_each_text(seg_data_subquery.c.seg_data)['key'].label('seg_id'),
+        #         # db.func.json_each_text(seg_data_subquery.c.seg_data)['value'].cast(db.JSON)['like'].label('like_value')
+        #     )
+        #     .cte('seg_likes')
+        # )
+
+        # # 构建子查询 seg_likes_summary
+        # seg_likes_summary_subquery = (
+        #     db.select(
+        #         seg_likes_subquery.c.content,
+        #         seg_likes_subquery.c.seg_id,
+        #         db.func.sum(db.case((seg_likes_subquery.c.like_value.cast(db.Integer) == 1, 1), else_=0)).label('seg_likes'),
+        #         db.func.sum(db.case((seg_likes_subquery.c.like_value.cast(db.Integer) == -1, 1), else_=0)).label('seg_dislikes')
+        #     )
+        #     .group_by(seg_likes_subquery.c.content, seg_likes_subquery.c.seg_id)
+        #     .cte('seg_likes_summary')
+        # )
+
+        # # 构建最终查询
+        # final_query = (
+        #     db.select(
+        #         seg_likes_summary_subquery.c.content,
+        #         seg_likes_summary_subquery.c.seg_id,
+        #         seg_likes_summary_subquery.c.seg_likes,
+        #         seg_likes_summary_subquery.c.seg_dislikes
+        #     )
+        #     .select_from(seg_likes_summary_subquery)
+        #     .order_by(seg_likes_summary_subquery.c.content, seg_likes_summary_subquery.c.seg_id)
+        # )
+        countQuery=text("""
+WITH seg_data AS (
+  SELECT
+    dq.id,
+    dq.content,
+    json_each_text(dq.seg_ids) AS seg_data
+  FROM
+    public.dataset_queries dq
+  WHERE
+    dq.dataset_id = '645f3f81-af00-420f-a5cd-e67fb25f1386'
+  ORDER BY
+    dq.created_at
+),
+seg_likes AS (
+  SELECT
+    (sd.seg_data).key AS seg_id,
+    (sd.seg_data).value::json->>'like' AS like_value
+  FROM
+    seg_data sd
+)
+-- seg_likes_summary AS (
+--   SELECT
+--     seg_id,
+--     SUM(CASE WHEN like_value::int = 1 THEN 1 ELSE 0 END) AS seg_likes_1,
+--     SUM(CASE WHEN like_value::int = -1 THEN 1 ELSE 0 END) AS seg_likes_minus1
+--   FROM
+--     seg_likes
+--   GROUP BY
+--     seg_id
+-- )
+SELECT
+--   sls.seg_id AS id,
+count(distinct sls.seg_id) as count
+FROM
+  seg_likes sls
+                        """)
+        query=text("""WITH seg_data AS (
+  SELECT
+    dq.id,
+    dq.content,
+    json_each_text(dq.seg_ids) AS seg_data
+  FROM
+    public.dataset_queries dq
+  WHERE
+    dq.dataset_id = '645f3f81-af00-420f-a5cd-e67fb25f1386'
+  ORDER BY
+    dq.created_at
+),
+seg_likes AS (
+  SELECT
+    (sd.seg_data).key AS seg_id,
+    (sd.seg_data).value::json->>'like' AS like_value
+  FROM
+    seg_data sd
+),
+seg_likes_summary AS (
+  SELECT
+    seg_id,
+    SUM(CASE WHEN like_value::int = 1 THEN 1 ELSE 0 END) AS seg_likes,
+    SUM(CASE WHEN like_value::int = -1 THEN 1 ELSE 0 END) AS seg_dislikes
+  FROM
+    seg_likes
+  GROUP BY
+    seg_id
+)
+SELECT
+  sls.seg_id AS id,
+  dsg.dataset_id,
+  dsg.document_id,
+  dsg.position,
+  dsg.content,
+  dsg.word_count,
+  dsg.keywords,
+  dsg.hit_count,
+  dsg.answer,
+  dsg.updated_by,
+  dsg.updated_at,
+  sls.seg_likes,
+  sls.seg_dislikes
+FROM
+  seg_likes_summary sls
+join document_segments as dsg
+on CAST(dsg.id AS VARCHAR)=sls.seg_id
+ORDER BY
+  sls.seg_id
+offset :offset
+limit :limit;
+""")
+        # 执行查询并获取结果
+        results = db.session.execute(query,{'dataset_id':dataset_id,'offset':(page_no-1)*page_size,'limit':page_size})
+        count = db.session.execute(countQuery,{'dataset_id':dataset_id})
+        results = [ {
+            'id': row[0],
+            'dataset_id': str(row[1]),
+            'document_id': str(row[2]),
+            'position': row[3],
+            'content': row[4],
+            'word_count': row[5],
+            'keywords': row[6],
+            'hit_count': row[7],
+            'answer': row[8],
+            'updated_by': row[9],
+            'updated_at': row[10].strftime('%Y-%m-%d %H:%M:%S') if row[4] else None,
+            'seg_likes': row[11],
+            'seg_dislikes': row[12]
+        } for row in results]
+        return results

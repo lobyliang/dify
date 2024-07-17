@@ -1,0 +1,83 @@
+provider: ali_nls
+label:
+  zh_Hans: 阿里云智能语音交互
+  en_US: Ali Intelligent Speech Interaction
+description:
+  en_US: Alibaba Cloud is based on technologies such as speech recognition, text-to-speech synthesis, and natural language understanding.
+  zh_Hans: 阿里云基于语音识别、语音合成、自然语言理解等技术。
+background: "#ffd0af"
+help:
+  title:
+    en_US: Get Credential
+    zh_Hans: 获取 凭证
+  url:
+    en_US: https://help.aliyun.com/document_detail/450514.html?spm=a2c4g.119258.0.0.7bb560ecseTEyk
+supported_model_types:
+  - speech2text
+  - tts
+configurate_methods:
+  - predefined-model
+  - customizable-model
+model_credential_schema:
+  model:
+    label:
+      en_US: Model Name
+      zh_Hans: 模型名称
+    placeholder:
+      en_US: Enter your model name
+      zh_Hans: 输入模型名称
+  credential_form_schemas:
+    - variable: ali_nls_app_key
+      label:
+        en_US: App Key
+      type: text-input
+      required: true
+      placeholder:
+        zh_Hans: 在此输入您的 App key
+        en_US: Enter your App key
+    - variable: access_key_id
+      label:
+        zh_Hans: AccessKey ID
+        en_US: AccessKey ID
+      type: secret-input
+      required: true
+      placeholder:
+        zh_Hans: 在此输入您的 AccessKey ID
+        en_US: Enter your AccessKey ID
+    - variable: access_key_secret
+      label:
+        zh_Hans: AccessKey Secret
+        en_US: AccessKey Secret
+      type: secret-input
+      required: true
+      placeholder:
+        zh_Hans: 在此输入您的 AccessKey Secret
+        en_US: Enter your AccessKey Secret
+provider_credential_schema:
+  credential_form_schemas:
+    - variable: ali_nls_app_key
+      label:
+        en_US: App Key
+      type: text-input
+      required: true
+      placeholder:
+        zh_Hans: 在此输入您的 App key
+        en_US: Enter your App key
+    - variable: access_key_id
+      label:
+        zh_Hans: AccessKey ID
+        en_US: AccessKey ID
+      type: secret-input
+      required: true
+      placeholder:
+        zh_Hans: 在此输入您的 AccessKey ID
+        en_US: Enter your AccessKey ID
+    - variable: access_key_secret
+      label:
+        zh_Hans: AccessKey Secret
+        en_US: AccessKey Secret
+      type: secret-input
+      required: true
+      placeholder:
+        zh_Hans: 在此输入您的 AccessKey Secret
+        en_US: Enter your AccessKey Secret

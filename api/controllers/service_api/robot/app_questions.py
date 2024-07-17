@@ -1,24 +1,21 @@
 
 
-from email.policy import default
 import logging
-from flask_restful import Resource
-from flask import Response, json
-from flask_restful import Resource, reqparse
+from flask_restful import reqparse
 from controllers.service_api import api
 from controllers.service_api.wraps import DatasetApiResource
 from services.question_service import QuestionService
-from flask_restful import Resource, marshal,fields
-class CreateAppQuestionApi(Resource):
+from flask_restful import marshal,fields
+class CreateAppQuestionApi(DatasetApiResource):
 
-    def post(self, app_id):
+    def post(self,tenant_id,app_id):
         argparser = reqparse.RequestParser()
         argparser.add_argument('questions', type=list, required=True,location='json')
-        argparser.add_argument('tenant_id', type=str, required=True,location='json')
+        # argparser.add_argument('tenant_id', type=str, required=True,location='json')
         argparser.add_argument('is_virtual', type=bool, required=False, default=False,location='json')
         args = argparser.parse_args(strict=True)
         questions = args['questions']
-        tenant_id = args['tenant_id']
+        # tenant_id = args['tenant_id']
         is_virtual = args['is_virtual']
         
         try:
@@ -41,14 +38,28 @@ AppQuestionField={
 # }
 class GetAppQuestionApi(DatasetApiResource):
 
-    def get(self,tenant_id:str):
+    def delete(self,tenant_id):
+        try:
+            argparser = reqparse.RequestParser()
+            argparser.add_argument('doc_ids', type=list, required=True,location='json')
+            argparser.add_argument('app_id', type=str, required=False,location='json')
+            args = argparser.parse_args(strict=True)
+            doc_ids = args['doc_ids']
+            app_id = args['app_id']
+            QuestionService.delete_app_question(tenant_id,doc_ids,app_id)
+            return {},200
+        except Exception as e:
+            logging.error(f"删除APP问题失败！for{e}")
+            return {}, 500
+
+    def post(self,tenant_id:str):
         argparser = reqparse.RequestParser()
-        argparser.add_argument('app_id', type=str, required=False,location='json')
+        argparser.add_argument('app_id', type=str,default=None, required=False,location='json')
         # argparser.add_argument('tenant_id', type=str, required=True,location='json')
         argparser.add_argument('status', type=str,default=None, required=False,location='json')
         argparser.add_argument('page_no', type=int, default=None,required=False,location='json')
         argparser.add_argument('page_size', type=int,default=None, required=False,location='json')
-        args = argparser.parse_args(strict=True)
+        args = argparser.parse_args()#strict=True
         app_id = args['app_id']
         # tenant_id = args['tenant_id']
         status = args['status']
@@ -63,12 +74,12 @@ class GetAppQuestionApi(DatasetApiResource):
                 "page": page_no,
                 "pageSize": page_size,
                 "total": count,
-                "hasMore": ((page_no-1) * page_size+ len(documents_ids) )< count,
+                "hasMore": ((page_no-1) * page_size+ len(documents_ids) )< count if page_no is not None and page_size is not None else False,
 
             },200
         except Exception as e:
             logging.error(f"查询APP问题失败！for{e}")
-            return [], 200
+            return [], 500
         
 class MarchAppQuestionApi(DatasetApiResource):
     #tenant_id:str,query:str,top_k:int=20,score_threshold:float=0.3

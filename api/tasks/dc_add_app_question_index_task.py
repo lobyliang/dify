@@ -1,18 +1,13 @@
-import datetime
 import logging
 import time
 
 import click
 from celery import shared_task
-from werkzeug.exceptions import NotFound
 
 from core.rag.datasource.vdb.dc_vector_factory import DCVector
-from core.rag.index_processor.index_processor_factory import IndexProcessorFactory
 from core.rag.models.document import Document
 from extensions.ext_database import db
 from extensions.ext_redis import redis_client
-from models.dataset import Document as DatasetDocument
-from models.dataset import DocumentSegment
 from models.dc_models import AppQuestions
 
 

@@ -30,7 +30,83 @@ class FetchUserArg(BaseModel):
     fetch_from: WhereisUserArg
     required: bool = False
 
+##############################Lobyliang##################
+def dream_validate_and_get_api_token(scope=None):
+    """
+    Validate and get API token.
+    """
+    auth_header = request.headers.get('Dream-Ai')
+    if auth_header is None or ' ' not in auth_header:
+        raise Unauthorized("Authorization header must be provided and start with 'Bearer'")
 
+    auth_scheme, auth_token = auth_header.split(None, 1)
+    auth_scheme = auth_scheme.lower()
+
+    if auth_scheme != 'bearer':
+        raise Unauthorized("Authorization scheme must be 'Bearer'")
+
+    api_token = db.session.query(ApiToken).filter(
+        ApiToken.token == auth_token,
+        ApiToken.type == scope,
+    ).first()
+
+    if not api_token:
+        raise Unauthorized("Access token is invalid")
+
+    api_token.last_used_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    db.session.commit()
+
+    return api_token
+
+def dream_validate_cmd_token(view: Optional[Callable] = None, *, fetch_user_arg: Optional[FetchUserArg] = None):
+    def decorator(view_func):
+        @wraps(view_func)
+        def decorated_view(*args, **kwargs):
+            api_token = dream_validate_and_get_api_token('app')
+
+            app_model = db.session.query(App).filter(App.id == api_token.app_id).first()
+            if not app_model:
+                raise Forbidden("The app no longer exists.")
+
+            if app_model.status != 'normal':
+                raise Forbidden("The app's status is abnormal.")
+
+            if not app_model.enable_api:
+                raise Forbidden("The app's API service has been disabled.")
+
+            tenant = db.session.query(Tenant).filter(Tenant.id == app_model.tenant_id).first()
+            if tenant.status == TenantStatus.ARCHIVE:
+                raise Forbidden("The workspace's status is archived.")
+
+            kwargs['app_model'] = app_model
+
+            if fetch_user_arg:
+                if fetch_user_arg.fetch_from == WhereisUserArg.QUERY:
+                    user_id = request.args.get('user')
+                elif fetch_user_arg.fetch_from == WhereisUserArg.JSON:
+                    user_id = request.get_json().get('user')
+                elif fetch_user_arg.fetch_from == WhereisUserArg.FORM:
+                    user_id = request.form.get('user')
+                else:
+                    # use default-user
+                    user_id = None
+
+                if not user_id and fetch_user_arg.required:
+                    raise ValueError("Arg user must be provided.")
+
+                if user_id:
+                    user_id = str(user_id)
+
+                kwargs['end_user'] = create_or_update_end_user_for_user_id(app_model, user_id)
+
+            return view_func(*args, **kwargs)
+        return decorated_view
+
+    if view is None:
+        return decorator
+    else:
+        return decorator(view)
+########################################################
 def validate_app_token(view: Optional[Callable] = None, *, fetch_user_arg: Optional[FetchUserArg] = None):
     def decorator(view_func):
         @wraps(view_func)

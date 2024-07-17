@@ -69,7 +69,8 @@ def upgrade():
 
     with op.batch_alter_table('dataset_queries', schema=None) as batch_op:
         batch_op.add_column(sa.Column('like', sa.Integer(), nullable=True))
-        batch_op.add_column(sa.Column('dislike', sa.Integer(), nullable=True))
+        batch_op.add_column(sa.Column('seg_ids', sa.JSON, nullable=True))
+        # batch_op.add_column(sa.Column('dislike', sa.Integer(), nullable=True))
 
     with op.batch_alter_table('messages', schema=None) as batch_op:
         batch_op.add_column(sa.Column('cmd', sa.String(length=24), nullable=True))
@@ -106,7 +107,8 @@ def downgrade():
         batch_op.drop_column('cmd')
 
     with op.batch_alter_table('dataset_queries', schema=None) as batch_op:
-        batch_op.drop_column('dislike')
+        # batch_op.drop_column('dislike')
+        batch_op.drop_column('seg_ids')
         batch_op.drop_column('like')
 
     with op.batch_alter_table('apps', schema=None) as batch_op:

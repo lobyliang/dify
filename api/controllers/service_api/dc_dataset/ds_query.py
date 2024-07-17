@@ -1,3 +1,5 @@
+import argparse
+import logging
 from flask_restful import fields
 # from requests import request
 from flask import request
@@ -146,9 +148,13 @@ class RAGChunckListApi(DatasetApiResource):
     
 class RAGCommnetApi(DatasetApiResource):
 
-    def post(self, tenant_id,query_id:str,like:int):
-        ret = CustomDataSetRetrieval.comment_rag_query(query_id=query_id,like=like)
-        return ret,200
+    def post(self, tenant_id,query_id:str,seg_id:str,like:str):
+        parser = reqparse.RequestParser()
+        parser.add_argument('rate', type=float, required=True, nullable=False, location='args')
+        args = parser.parse_args()
+        rate = args['rate']
+        CustomDataSetRetrieval.comment_rag_query(query_id=query_id,like=like,seg_id=seg_id,rate=rate)
+        return {'msg':'success'},200
 
 def _validate_description_length(description):
     if len(description) > 400:
@@ -380,8 +386,58 @@ class RAGDocumentRenameApi(DocumentResource):
 
         return document
 
+
+class RAGCommnetListApi(DocumentResource):
+
+    # @marshal_with(document_fields)
+    def get(self,tenant_id, dataset_id):
+        # The role of the current user in the ta table must be admin or owner
+        # if not current_user.is_admin_or_owner:
+        #     raise Forbidden()
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('page_no', type=int, required=True, nullable=False, location='args')
+        parser.add_argument('page_size', type=int, required=True, nullable=False, location='args')
+        args = parser.parse_args()
+        page_no = args['page_no']
+        page_size = args['page_size']
+        try:
+            custom_dataset_retrieval = CustomDataSetRetrieval()
+            ret = custom_dataset_retrieval.dataset_comment_list(dataset_id,page_no,page_size)
+        except Exception as e:
+            logging.error(e)
+            raise e
+        return ret,200
+    
+class RAGDocumentCommnetListApi(DocumentResource):
+
+    # @marshal_with(document_fields)
+    def get(self,tenant_id, dataset_id):
+        # The role of the current user in the ta table must be admin or owner
+        # if not current_user.is_admin_or_owner:
+        #     raise Forbidden()
+
+        # parser = reqparse.RequestParser()
+        # parser.add_argument('name', type=str, required=True, nullable=False, location='json')
+        # args = parser.parse_args()
+
+        try:
+            parser = reqparse.RequestParser()
+            parser.add_argument('page_no', type=int, required=True, nullable=False, location='args')
+            parser.add_argument('page_size', type=int, required=True, nullable=False, location='args')
+            args = parser.parse_args()
+            page_no = args['page_no']
+            page_size = args['page_size']
+            custom_dataset_retrieval = CustomDataSetRetrieval()
+            ret = custom_dataset_retrieval.document_comment_list_in_dataset(dataset_id,page_no=page_no,page_size=page_size)
+        except Exception as e:
+            logging.error(e)
+            raise e
+        return ret,200    
 api.add_resource(RAGDatasetApi, '/rag/datasets/<uuid:dataset_id>')
-api.add_resource(RAGCommnetApi, '/rag/query/<string:query_id>/comment/<int:like>')  
+api.add_resource(RAGCommnetApi, '/rag/query/<string:query_id>/<string:seg_id>/comment/<string:like>')  
+api.add_resource(RAGCommnetListApi, '/rag/datasets/<uuid:dataset_id>/comments')
+api.add_resource(RAGDocumentCommnetListApi, '/rag/datasets/<uuid:dataset_id>/documents/comments')
 api.add_resource(RAGQueryApi, '/rag/query')
 api.add_resource(RAGDataSetListApi, '/rag/list')
 api.add_resource(RAGChunckListApi, '/rag/<uuid:doc_id>/chuncks/<int:page_no>/<int:page_size>')

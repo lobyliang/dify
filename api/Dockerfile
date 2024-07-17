@@ -1,5 +1,5 @@
 # base image
-FROM python:3.10-slim-bookworm AS base
+FROM registry.cn-hangzhou.aliyuncs.com/mr-docker-hub/python:3.10-slim-bookworm AS base
 
 LABEL maintainer="takatost@gmail.com"
 
