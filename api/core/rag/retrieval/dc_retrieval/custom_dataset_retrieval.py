@@ -831,7 +831,8 @@ limit :limit;
 """)
         # 执行查询并获取结果
         results = db.session.execute(query,{'dataset_id':dataset_id,'offset':(page_no-1)*page_size,'limit':page_size})
-        count = db.session.execute(countQuery,{'dataset_id':dataset_id})
+        count = db.session.execute(countQuery,{'dataset_id':dataset_id}).fetchone()
+        total_count = count[0]
         results = [ {
             'id': row[0],
             'dataset_id': str(row[1]),
@@ -847,4 +848,6 @@ limit :limit;
             'seg_likes': row[11],
             'seg_dislikes': row[12]
         } for row in results]
-        return results
+        return {'total_count':total_count,'page_no': page_no,
+            'page_size': page_size,
+            'hasMore': total_count > page_no * page_size,'data':results}
