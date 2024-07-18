@@ -1,94 +1,117 @@
-import json
-from collections.abc import Generator
-from typing import Any, Union
-
-from sqlalchemy import and_
-from sqlalchemy.orm import aliased
-
 # from core.application_manager import ApplicationManager
 # from core.deram_application_manager import DeramApplicationManager
-from core.app.entities.app_invoke_entities import InvokeFrom
-from core.file.message_file_parser import MessageFileParser
 from extensions.ext_database import db
 from models.dc_models import AppCategory, AppQuestions
-from models.model import Account, App, AppModelConfig, Conversation, EndUser, Message,Site
-from services.app_model_config_service import AppModelConfigService
-from services.errors.app import MoreLikeThisDisabledError
+from models.model import App, EndUser, Message, Site
+
 # from services.errors.app_model_config import AppModelConfigBrokenError
 # from services.errors.conversation import ConversationCompletedError, ConversationNotExistsError
-from services.errors.message import MessageNotExistsError
 from datetime import datetime
 
 
 class ChatRebotService:
     @classmethod
-    def get_cmd_app(cls,cmd:str):
+    def get_cmd_app(cls, cmd: str):
         app_model = db.session.query(App).filter(App.cmd == cmd).first()
         if not app_model:
             return None
 
-        if app_model.status != 'normal':
+        if app_model.status != "normal":
             return None
 
         if not app_model.enable_api:
             return None
         return app_model
-    
+
     @classmethod
-    def get_app_categories(cls)->list:
-        categories = db.session.query(AppCategory).filter(AppCategory.is_del==False).all()
+    def get_app_categories(cls) -> list:
+        categories = (
+            db.session.query(AppCategory).filter(AppCategory.is_del == False).all()
+        )
         return categories
-    
-    #select a.id as app_id,a.name as app_name,a.cmd as cmd,a.category as category,a.func_name as func_name,b.description as desc from apps as a  join sites as b on a.id=b.app_id where cmd is not null
+
+    # select a.id as app_id,a.name as app_name,a.cmd as cmd,a.category as category,a.func_name as func_name,b.description as desc from apps as a  join sites as b on a.id=b.app_id where cmd is not null
     @classmethod
-    def get_cmds(cls)->dict:
+    def get_cmds(cls) -> dict:
         aa = cls.get_app_categories()
         # app_id = aliased(App.id).alias('app_id')
         # app_name = aliased(App.name).alias('app_name')
-        cmds = db.session.query(App.id.label('app_id'),App.name.label('app_name'),\
-                                App.chat_icon,\
-                         App.cmd,App.category,App.category_name,App.func_name,Site.description).\
-                         join(Site,Site.app_id==App.id).filter(App.cmd !=None, App.cmd!="").all()
-        ret :dict = {"categories":[]}
+        cmds = (
+            db.session.query(
+                App.id.label("app_id"),
+                App.name.label("app_name"),
+                App.chat_icon,
+                App.cmd,
+                App.category,
+                App.category_name,
+                App.func_name,
+                Site.description,
+            )
+            .join(Site, Site.app_id == App.id)
+            .filter(App.cmd != None, App.cmd != "")
+            .all()
+        )
+        ret: dict = {"categories": []}
         if cmds is not None:
             for cmd in cmds:
                 # if cmd.category in ret['categories']:
-                if  any(d['id'] == cmd.category for d in ret["categories"]):
-                    item = [d for d in ret["categories"] if d['id']==cmd.category][0]
+                if any(d["id"] == cmd.category for d in ret["categories"]):
+                    item = [d for d in ret["categories"] if d["id"] == cmd.category][0]
                     que_list = cls.get_question_list(cmd)
                     cmd_dict = cmd._asdict()
-                    cmd_dict["questions"]=que_list
+                    cmd_dict["questions"] = que_list
                     item["cmds"].append(cmd_dict)
                     # ret["categories"]["cmds"].append(cmd._asdict())
                 else:
                     que_list = cls.get_question_list(cmd)
                     cmd_dict = cmd._asdict()
-                    cmd_dict["questions"]=que_list
-                    ret["categories"].append({"id":cmd.category,"name":cmd.category_name,"cmds":[cmd_dict]}) 
+                    cmd_dict["questions"] = que_list
+                    ret["categories"].append(
+                        {
+                            "id": cmd.category,
+                            "name": cmd.category_name,
+                            "cmds": [cmd_dict],
+                        }
+                    )
         return ret
 
     @classmethod
     def get_question_list(cls, cmd):
-        questions = db.session.query(AppQuestions.questions).filter(AppQuestions.app_id==cmd.app_id).first()
-        if questions.questions is None or len(questions.questions)==0:
+        questions = (
+            db.session.query(AppQuestions.questions)
+            .filter(AppQuestions.app_id == cmd.app_id)
+            .first()
+        )
+        if questions.questions is None or len(questions.questions) == 0:
             return None
-        que_list  = [que for  que in questions.questions.split('\n')]
-        
-        return que_list #if que_list is not None and len(que_list)>0 else None
+        que_list = [que for que in questions.questions.split("\n")]
+
+        return que_list  # if que_list is not None and len(que_list)>0 else None
 
     @classmethod
-    def get_tenant_token_consume(cls,app_token:str,begTime:datetime,endTime:datetime) -> dict:
-        end_user_id = db.session.query(EndUser.id).filter(EndUser.app_token==app_token).first()
+    def get_tenant_token_consume(
+        cls, app_token: str, begTime: datetime, endTime: datetime
+    ) -> dict:
+        end_user_id = (
+            db.session.query(EndUser.id).filter(EndUser.app_token == app_token).first()
+        )
 
-        ret = db.session.query(db.func.sum(Message.message_tokens).label('total_message_tokens'),\
-                         db.func.sum(Message.answer_tokens).label('total_answer_tokens'),\
-                        db.func.sum(Message.provider_response_latency).label('total_latency')).\
-                        filter(Message.from_end_user_id==end_user_id.id,\
-                              Message.created_at > begTime,\
-                            Message.created_at < endTime ).first()
+        ret = (
+            db.session.query(
+                db.func.sum(Message.message_tokens).label("total_message_tokens"),
+                db.func.sum(Message.answer_tokens).label("total_answer_tokens"),
+                db.func.sum(Message.provider_response_latency).label("total_latency"),
+            )
+            .filter(
+                Message.from_end_user_id == end_user_id.id,
+                Message.created_at > begTime,
+                Message.created_at < endTime,
+            )
+            .first()
+        )
 
         return ret._asdict()
-    
+
     # @classmethod
     # def chat3(cls, app_model: App, user: Union[Account, EndUser], args: Any,
     #                invoke_from: InvokeFrom, streaming: bool = True,
@@ -100,11 +123,9 @@ class ChatRebotService:
     #     cmd = args['cmd']
     #     files = args['files'] if 'files' in args and args['files'] else []
     #     app_model_id = app_model.id
-    #     if cmd:    
+    #     if cmd:
     #         app_model = cls.get_cmd_app(cmd)
 
-            
-        
     #     auto_generate_name = args['auto_generate_name'] \
     #         if 'auto_generate_name' in args else True
 
@@ -159,7 +180,7 @@ class ChatRebotService:
     #             )
 
     #             app_model_config = app_model_config.from_model_config_dict(conversation_override_model_configs)
-            
+
     #         if is_model_config_override:
     #             # build new app model config
     #             if 'model' not in args['model_config']:
@@ -240,7 +261,7 @@ class ChatRebotService:
     #         },
     #         cmd = cmd
     #     )
-    
+
     # @classmethod
     # def chat2(cls, app_model: App, user: Union[Account, EndUser], args: Any,
     #                invoke_from: InvokeFrom, rouyi_user_id:str,streaming: bool = True,
@@ -252,11 +273,9 @@ class ChatRebotService:
     #     cmd = args['cmd']
     #     files = args['files'] if 'files' in args and args['files'] else []
     #     app_model_id = app_model.id
-    #     if cmd:    
+    #     if cmd:
     #         app_model = cls.get_cmd_app(cmd)
 
-            
-        
     #     auto_generate_name = args['auto_generate_name'] \
     #         if 'auto_generate_name' in args else True
 
@@ -311,7 +330,7 @@ class ChatRebotService:
     #             )
 
     #             app_model_config = app_model_config.from_model_config_dict(conversation_override_model_configs)
-            
+
     #         if is_model_config_override:
     #             # build new app model config
     #             if 'model' not in args['model_config']:
@@ -391,10 +410,6 @@ class ChatRebotService:
     #             "auto_generate_conversation_name": auto_generate_name
     #         }
     #     )
-    
-
-    
-
 
     # @classmethod
     # def chat(cls, app_model: App, user: Union[Account, EndUser], args: Any,
@@ -406,7 +421,7 @@ class ChatRebotService:
     #     query = args['query']
     #     cmd = args['cmd']
     #     files = args['files'] if 'files' in args and args['files'] else []
-        
+
     #     auto_generate_name = args['auto_generate_name'] \
     #         if 'auto_generate_name' in args else True
 
@@ -460,7 +475,7 @@ class ChatRebotService:
     #             )
 
     #             app_model_config = app_model_config.from_model_config_dict(conversation_override_model_configs)
-            
+
     #         if is_model_config_override:
     #             # build new app model config
     #             if 'model' not in args['model_config']:
@@ -527,7 +542,7 @@ class ChatRebotService:
     #         cmdApp = cls.get_cmd_app(cmd)
     #         if cmdApp:
     #             if cmdApp.mode == 'completion' or cmdApp.mode == 'chat':
-    #                 app_model_config = cmdApp.app_model_config 
+    #                 app_model_config = cmdApp.app_model_config
     #                 return application_manager.generate(
     #                         tenant_id=cmdApp.tenant_id,
     #                         app_id=cmdApp.id,

@@ -16,9 +16,18 @@ from controllers.service_api.app.error import (
     ProviderNotInitializeError,
     ProviderQuotaExceededError,
 )
-from controllers.service_api.wraps import FetchUserArg, WhereisUserArg, dream_validate_cmd_token, validate_app_token
+from controllers.service_api.wraps import (
+    FetchUserArg,
+    WhereisUserArg,
+    dream_validate_cmd_token,
+    validate_app_token,
+)
 
-from core.errors.error import ModelCurrentlyNotSupportError, ProviderTokenNotInitError, QuotaExceededError
+from core.errors.error import (
+    ModelCurrentlyNotSupportError,
+    ProviderTokenNotInitError,
+    QuotaExceededError,
+)
 from core.model_runtime.errors.invoke import InvokeError
 from libs.helper import uuid_value
 from models.model import App, AppMode, EndUser
@@ -27,6 +36,7 @@ import services.errors
 import services.errors.app_model_config
 import services.errors.conversation
 from services.question_service import QuestionService
+
 # from services.chat_robot_service import ChatRebotService
 
 
@@ -50,7 +60,7 @@ from services.question_service import QuestionService
 #         args = parser.parse_args()
 
 #         streaming = args['response_mode'] == 'streaming'
-        
+
 
 #         try:
 #             response = ChatRebotService.chat(
@@ -83,7 +93,7 @@ from services.question_service import QuestionService
 #         except Exception as e:
 #             logging.exception("internal server error.")
 #             raise InternalServerError()
-        
+
 
 # class ChatRobot2(Resource):
 #     @validate_cmd_token(fetch_user_arg=FetchUserArg(fetch_from=WhereisUserArg.JSON, required=True))
@@ -105,7 +115,7 @@ from services.question_service import QuestionService
 #         args = parser.parse_args()
 
 #         streaming = args['response_mode'] == 'streaming'
-        
+
 
 #         try:
 #             response = ChatRebotService.chat3(
@@ -136,7 +146,7 @@ from services.question_service import QuestionService
 #             raise e
 #         except Exception as e:
 #             logging.exception("internal server error.")
-#             raise InternalServerError()        
+#             raise InternalServerError()
 
 
 # def compact_response(response: Union[dict, Generator]) -> Response:
@@ -151,39 +161,61 @@ from services.question_service import QuestionService
 
 
 class ChatRobot(Resource):
-    @dream_validate_cmd_token(fetch_user_arg=FetchUserArg(fetch_from=WhereisUserArg.JSON, required=True))
+    @dream_validate_cmd_token(
+        fetch_user_arg=FetchUserArg(fetch_from=WhereisUserArg.JSON, required=True)
+    )
     def post(self, app_model: App, end_user: EndUser):
         app_mode = AppMode.value_of(app_model.mode)
         if app_mode not in [AppMode.CHAT, AppMode.AGENT_CHAT, AppMode.ADVANCED_CHAT]:
             raise NotChatAppError()
 
         parser = reqparse.RequestParser()
-        parser.add_argument('cmd', type=str, required=False, location='json')
-        parser.add_argument('inputs', type=dict, required=True, location='json')
-        parser.add_argument('query', type=str, required=True, location='json')
-        parser.add_argument('files', type=list, required=False, location='json')
-        parser.add_argument('response_mode', type=str, choices=['blocking', 'streaming'], location='json')
-        parser.add_argument('conversation_id', type=uuid_value, location='json')
-        parser.add_argument('retriever_from', type=str, required=False, default='dev', location='json')
-        parser.add_argument('auto_generate_name', type=bool, required=False, default=True, location='json')
+        parser.add_argument("cmd", type=str, required=False, location="json")
+        parser.add_argument("inputs", type=dict, required=True, location="json")
+        parser.add_argument("query", type=str, required=True, location="json")
+        parser.add_argument("files", type=list, required=False, location="json")
+        parser.add_argument(
+            "response_mode",
+            type=str,
+            choices=["blocking", "streaming"],
+            location="json",
+        )
+        parser.add_argument("conversation_id", type=uuid_value, location="json")
+        parser.add_argument(
+            "retriever_from", type=str, required=False, default="dev", location="json"
+        )
+        parser.add_argument(
+            "auto_generate_name",
+            type=bool,
+            required=False,
+            default=True,
+            location="json",
+        )
 
         args = parser.parse_args()
 
-        streaming = args['response_mode'] == 'streaming'
+        streaming = args["response_mode"] == "streaming"
 
-        cmd = args['cmd']
+        cmd = args["cmd"]
         if not cmd:
-            marchs = QuestionService.march_app_question(app_model.tenant_id, args['query'])
-            marched_app_id = marchs.get("marched_app_id",None)
+            marchs = QuestionService.march_app_question(
+                app_model.tenant_id, args["query"]
+            )
+            marched_app_id = marchs.get("marched_app_id", None)
             if marched_app_id:
-                marched_app_model = db.session.query(App).filter(App.id == marched_app_id).first()
+                marched_app_model = (
+                    db.session.query(App).filter(App.id == marched_app_id).first()
+                )
                 if marched_app_model:
                     app_model = marched_app_model
         else:
             cmd_app_model = db.session.query(App).filter(App.cmd == cmd).first()
-            if cmd_app_model and cmd_app_model.status!='normal' and cmd_app_model.enable_api:
+            if (
+                cmd_app_model
+                and cmd_app_model.status != "normal"
+                and cmd_app_model.enable_api
+            ):
                 app_model = cmd_app_model
-
 
         try:
             response = AppGenerateService.generate(
@@ -191,7 +223,7 @@ class ChatRobot(Resource):
                 user=end_user,
                 args=args,
                 invoke_from=InvokeFrom.SERVICE_API,
-                streaming=streaming
+                streaming=streaming,
             )
 
             return helper.compact_generate_response(response)
@@ -215,10 +247,12 @@ class ChatRobot(Resource):
         except Exception as e:
             logging.exception("internal server error.")
             raise InternalServerError()
-        
+
 
 class ChatRobotStopApi(Resource):
-    @dream_validate_cmd_token(fetch_user_arg=FetchUserArg(fetch_from=WhereisUserArg.JSON, required=True))
+    @dream_validate_cmd_token(
+        fetch_user_arg=FetchUserArg(fetch_from=WhereisUserArg.JSON, required=True)
+    )
     def post(self, app_model: App, end_user: EndUser, task_id):
         app_mode = AppMode.value_of(app_model.mode)
         if app_mode not in [AppMode.CHAT, AppMode.AGENT_CHAT, AppMode.ADVANCED_CHAT]:
@@ -226,7 +260,8 @@ class ChatRobotStopApi(Resource):
 
         AppQueueManager.set_stop_flag(task_id, InvokeFrom.SERVICE_API, end_user.id)
 
-        return {'result': 'success'}, 200
-            
-api.add_resource(ChatRobot, '/chat_robot/')
-api.add_resource(ChatRobotStopApi, '/chat_robot/<string:task_id>/stop')
+        return {"result": "success"}, 200
+
+
+api.add_resource(ChatRobot, "/chat_robot/")
+api.add_resource(ChatRobotStopApi, "/chat_robot/<string:task_id>/stop")

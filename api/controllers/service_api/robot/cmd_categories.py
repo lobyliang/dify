@@ -15,9 +15,13 @@ from controllers.service_api.app.error import (
     ProviderNotInitializeError,
     ProviderQuotaExceededError,
 )
-from controllers.service_api.wraps import dream_validate_app_token# validate_app_token
+from controllers.service_api.wraps import dream_validate_app_token  # validate_app_token
 
-from core.errors.error import ModelCurrentlyNotSupportError, ProviderTokenNotInitError, QuotaExceededError
+from core.errors.error import (
+    ModelCurrentlyNotSupportError,
+    ProviderTokenNotInitError,
+    QuotaExceededError,
+)
 from core.model_runtime.errors.invoke import InvokeError
 
 from services.chat_robot_service import ChatRebotService
@@ -31,11 +35,13 @@ class CmdCategories(Resource):
     # @validate_app_token()
     @dream_validate_app_token()
     def get(self):
-        
+
         try:
             cmds = ChatRebotService.get_cmds()
 
-            return  Response(response=json.dumps(cmds), status=200, mimetype='application/json')
+            return Response(
+                response=json.dumps(cmds), status=200, mimetype="application/json"
+            )
         except services.errors.conversation.ConversationNotExistsError:
             raise NotFound("Conversation Not Exists.")
         except services.errors.conversation.ConversationCompletedError:
@@ -58,5 +64,4 @@ class CmdCategories(Resource):
             raise InternalServerError()
 
 
-api.add_resource(CmdCategories, '/chat_robot/categories/')
-
+api.add_resource(CmdCategories, "/chat_robot/categories/")

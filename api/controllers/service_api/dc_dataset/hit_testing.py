@@ -29,27 +29,30 @@ from services.hit_testing_service import HitTestingService
 
 class RAGHitTestingApi(DatasetApiResource):
 
-    def post(self,tenant_id, dataset_id):
+    def post(self, tenant_id, dataset_id):
         dataset_id_str = str(dataset_id)
-        user_id = request.headers.get('User_id',default="123")
-        user = request.headers.get('User',default="123")
-        end_user = db.session.query(EndUser) \
-                .filter(
+        user_id = request.headers.get("User_id", default="123")
+        user = request.headers.get("User", default="123")
+        end_user = (
+            db.session.query(EndUser)
+            .filter(
                 EndUser.tenant_id == tenant_id,
                 EndUser.external_user_id == user_id,
                 EndUser.session_id == user,
-                EndUser.type == 'service_api'
-                ).first()
+                EndUser.type == "service_api",
+            )
+            .first()
+        )
 
         if end_user is None:
             end_user = EndUser(
                 tenant_id=tenant_id,
-                type='service_api',
-                is_anonymous= False,
+                type="service_api",
+                is_anonymous=False,
                 name=user,
-                external_user_id = user_id,
-                session_id=user
-                )
+                external_user_id=user_id,
+                session_id=user,
+            )
             db.session.add(end_user)
             db.session.commit()
         dataset = DatasetService.get_dataset(dataset_id_str)
@@ -62,8 +65,10 @@ class RAGHitTestingApi(DatasetApiResource):
         #     raise Forbidden(str(e))
 
         parser = reqparse.RequestParser()
-        parser.add_argument('query', type=str, location='json')
-        parser.add_argument('retrieval_model', type=dict, required=False, location='json')
+        parser.add_argument("query", type=str, location="json")
+        parser.add_argument(
+            "retrieval_model", type=dict, required=False, location="json"
+        )
         args = parser.parse_args()
 
         HitTestingService.hit_testing_args_check(args)
@@ -71,13 +76,16 @@ class RAGHitTestingApi(DatasetApiResource):
         try:
             response = HitTestingService.retrieve_by_endUser(
                 dataset=dataset,
-                query=args['query'],
+                query=args["query"],
                 endUser=end_user,
-                retrieval_model=args['retrieval_model'],
-                limit=10
+                retrieval_model=args["retrieval_model"],
+                limit=10,
             )
 
-            return {"query": response['query'], 'records': marshal(response['records'], hit_testing_record_fields)}
+            return {
+                "query": response["query"],
+                "records": marshal(response["records"], hit_testing_record_fields),
+            }
         except services.errors.index.IndexNotInitializedError:
             raise DatasetNotInitializedError()
         except ProviderTokenNotInitError as ex:
@@ -89,7 +97,8 @@ class RAGHitTestingApi(DatasetApiResource):
         except LLMBadRequestError:
             raise ProviderNotInitializeError(
                 "No Embedding Model or Reranking Model available. Please configure a valid provider "
-                "in the Settings -> Model Provider.")
+                "in the Settings -> Model Provider."
+            )
         except InvokeError as e:
             raise CompletionRequestError(e.description)
         except ValueError as e:
@@ -99,4 +108,4 @@ class RAGHitTestingApi(DatasetApiResource):
             raise InternalServerError(str(e))
 
 
-api.add_resource(RAGHitTestingApi, '/rag/datasets/<uuid:dataset_id>/hit-testing')
+api.add_resource(RAGHitTestingApi, "/rag/datasets/<uuid:dataset_id>/hit-testing")
