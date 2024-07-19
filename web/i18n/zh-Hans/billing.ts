@@ -61,8 +61,6 @@ const translation = {
       bulkUpload: '批量上传文档',
       agentMode: '代理模式',
       workflow: '工作流',
-      llmLoadingBalancing: 'LLM 负载均衡',
-      llmLoadingBalancingTooltip: '向模型添加多个 API 密钥，有效绕过 API 速率限制。',
     },
     comingSoon: '即将推出',
     member: '成员',
@@ -75,7 +73,7 @@ const translation = {
       title: '标注回复数',
       tooltip: '标注回复功能通过人工编辑标注为应用提供了可定制的高质量问答回复能力',
     },
-    ragAPIRequestTooltip: '指单独调用 Dify 知识库数据处理能力的 API。',
+    ragAPIRequestTooltip: '指单独调用 Dream 知识库数据处理能力的 API。',
     receiptInfo: '只有团队所有者和团队管理员才能订阅和查看账单信息',
   },
   plans: {

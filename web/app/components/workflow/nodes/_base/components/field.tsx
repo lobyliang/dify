@@ -31,7 +31,7 @@ const Filed: FC<Props> = ({
     toggle: toggleFold,
   }] = useBoolean(true)
   return (
-    <div className={cn(className, inline && 'flex justify-between items-center w-full')}>
+    <div className={cn(className, inline && 'flex justify-between items-center')}>
       <div
         onClick={() => supportFold && toggleFold()}
         className={cn('flex justify-between items-center', supportFold && 'cursor-pointer')}>

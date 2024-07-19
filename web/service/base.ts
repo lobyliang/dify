@@ -67,6 +67,7 @@ export type IOtherOptions = {
   needAllResponseContent?: boolean
   deleteContentType?: boolean
   silent?: boolean
+  base?: string
   onData?: IOnData // for stream
   onThought?: IOnThought
   onFile?: IOnFile
@@ -258,6 +259,7 @@ const baseFetch = <T>(
     deleteContentType,
     getAbortController,
     silent,
+    base
   }: IOtherOptions,
 ): Promise<T> => {
   const options: typeof baseOptions & FetchOptionType = Object.assign({}, baseOptions, fetchOptions)
@@ -292,7 +294,13 @@ const baseFetch = <T>(
       options.headers.set('Content-Type', ContentType.json)
   }
 
-  const urlPrefix = isPublicAPI ? PUBLIC_API_PREFIX : API_PREFIX
+  let urlPrefix = ''
+  if (base) {
+    urlPrefix = base
+    options.headers.set('Authorization', `Bearer dataset-OVg7KPP9y3DtkodEph9uggPr`)
+  } else {
+    urlPrefix = isPublicAPI ? PUBLIC_API_PREFIX : API_PREFIX
+  }
   let urlWithPrefix = `${urlPrefix}${url.startsWith('/') ? url : `/${url}`}`
 
   const { method, params, body } = options
@@ -478,6 +486,7 @@ export const ssePost = (
     onTextReplace,
     onError,
     getAbortController,
+    base
   }: IOtherOptions,
 ) => {
   const abortController = new AbortController()
@@ -493,7 +502,12 @@ export const ssePost = (
 
   getAbortController?.(abortController)
 
-  const urlPrefix = isPublicAPI ? PUBLIC_API_PREFIX : API_PREFIX
+  let urlPrefix = ''
+  if (base) {
+    urlPrefix = base
+  } else {
+    urlPrefix = isPublicAPI ? PUBLIC_API_PREFIX : API_PREFIX
+  }
   const urlWithPrefix = `${urlPrefix}${url.startsWith('/') ? url : `/${url}`}`
 
   const { body } = options
@@ -580,4 +594,8 @@ export const patch = <T>(url: string, options = {}, otherOptions?: IOtherOptions
 
 export const patchPublic = <T>(url: string, options = {}, otherOptions?: IOtherOptions) => {
   return patch<T>(url, options, { ...otherOptions, isPublicAPI: true })
+}
+
+export const download = <T>(url: string, options = {}, otherOptions?: IOtherOptions) => {
+  return request<T>(url, Object.assign({}, options, { method: 'GET' }), otherOptions)
 }

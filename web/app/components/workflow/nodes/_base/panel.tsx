@@ -23,8 +23,8 @@ import {
 } from '@/app/components/base/icons/src/vender/line/general'
 import BlockIcon from '@/app/components/workflow/block-icon'
 import {
-  useAvailableBlocks,
   useNodeDataUpdate,
+  useNodesExtraData,
   useNodesInteractions,
   useNodesReadOnly,
   useNodesSyncDraft,
@@ -57,7 +57,8 @@ const BasePanel: FC<BasePanelProps> = ({
   const { handleNodeSelect } = useNodesInteractions()
   const { handleSyncWorkflowDraft } = useNodesSyncDraft()
   const { nodesReadOnly } = useNodesReadOnly()
-  const { availableNextBlocks } = useAvailableBlocks(data.type, data.isInIteration)
+  const nodesExtraData = useNodesExtraData()
+  const availableNextNodes = nodesExtraData[data.type].availableNextNodes
   const toolIcon = useToolIcon(data)
 
   const handleResize = useCallback((width: number) => {
@@ -156,7 +157,7 @@ const BasePanel: FC<BasePanelProps> = ({
           {cloneElement(children, { id, data })}
         </div>
         {
-          !!availableNextBlocks.length && (
+          !!availableNextNodes.length && (
             <div className='p-4 border-t-[0.5px] border-t-black/5'>
               <div className='flex items-center mb-1 text-gray-700 text-[13px] font-semibold'>
                 {t('workflow.panel.nextStep').toLocaleUpperCase()}

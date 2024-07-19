@@ -1,0 +1,7 @@
+.robotIcon {
+    position: relative;
+    background: url(./icons/robot.svg) 100%/100%;
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+}

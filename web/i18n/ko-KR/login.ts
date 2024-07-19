@@ -42,7 +42,7 @@ const translation = {
     passwordInvalid: '비밀번호는 문자와 숫자를 포함하고 8자 이상이어야 합니다.',
   },
   license: {
-    tip: 'Dify Community Edition을 시작하기 전에 GitHub의',
+    tip: 'Dream Community Edition을 시작하기 전에 GitHub의',
     link: '오픈 소스 라이선스',
   },
   join: '가입하기',

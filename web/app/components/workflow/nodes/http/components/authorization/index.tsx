@@ -87,6 +87,7 @@ const Authorization: FC<Props> = ({
   return (
     <Modal
       title={t(`${i18nPrefix}.authorization`)}
+      wrapperClassName='z-50 w-400'
       isShow={isShow}
       onClose={onHide}
     >

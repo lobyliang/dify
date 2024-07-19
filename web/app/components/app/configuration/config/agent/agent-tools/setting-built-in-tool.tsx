@@ -152,11 +152,11 @@ const SettingBuiltInTool: FC<Props> = ({
       isShow
       onHide={onHide}
       title={(
-        <div className='flex items-center'>
+        <div className='flex'>
           {typeof collection.icon === 'string'
             ? (
               <div
-                className='w-6 h-6 bg-cover bg-center rounded-md flex-shrink-0'
+                className='w-6 h-6 bg-cover bg-center rounded-md'
                 style={{
                   backgroundImage: `url(${collection.icon})`,
                 }}

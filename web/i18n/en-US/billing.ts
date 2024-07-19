@@ -61,8 +61,6 @@ const translation = {
       bulkUpload: 'Bulk upload documents',
       agentMode: 'Agent Mode',
       workflow: 'Workflow',
-      llmLoadingBalancing: 'LLM Load Balancing',
-      llmLoadingBalancingTooltip: 'Add multiple API keys to models, effectively bypassing the API rate limits. ',
     },
     comingSoon: 'Coming soon',
     member: 'Member',
@@ -75,7 +73,7 @@ const translation = {
       title: 'Annotation Quota Limits',
       tooltip: 'Manual editing and annotation of responses provides customizable high-quality question-answering abilities for apps. (Applicable only in chat apps)',
     },
-    ragAPIRequestTooltip: 'Refers to the number of API calls invoking only the knowledge base processing capabilities of Dify.',
+    ragAPIRequestTooltip: 'Refers to the number of API calls invoking only the knowledge base processing capabilities of Dream.',
     receiptInfo: 'Only team owner and team admin can subscribe and view billing information',
   },
   plans: {

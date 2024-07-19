@@ -8,6 +8,7 @@ import type {
   CompletionPromptConfig,
   ConversationHistoriesRole,
   DatasetConfigs,
+  FuncSetting,
   Inputs,
   ModelConfig,
   ModerationConfig,
@@ -97,6 +98,8 @@ type IDebugConfiguration = {
   isShowVisionConfig: boolean
   visionConfig: VisionSettings
   setVisionConfig: (visionConfig: VisionSettings, noNotice?: boolean) => void
+  setting: FuncSetting
+  setSetting: (setting: FuncSetting) => void
 }
 
 const DebugConfigurationContext = createContext<IDebugConfiguration>({
@@ -239,6 +242,15 @@ const DebugConfigurationContext = createContext<IDebugConfiguration>({
     transfer_methods: [TransferMethod.remote_url],
   },
   setVisionConfig: () => { },
+  setting: {
+    cmd: '',
+    category: '',
+    func_name: '',
+    match_list: [],
+    is_robot: false,
+    chat_icon: '',
+  },
+  setSetting: () => { },
 })
 
 export const useDebugConfigurationContext = () => useContext(DebugConfigurationContext)

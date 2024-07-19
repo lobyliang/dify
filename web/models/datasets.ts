@@ -167,7 +167,7 @@ export type InitialDocumentDetail = {
   display_status: DocumentDisplayStatus
   completed_segments?: number
   total_segments?: number
-  doc_form: 'text_model' | 'qa_model'
+  doc_form: 'text_model' | 'qa_model' | 'row_qa_model'
 }
 
 export type SimpleDocumentDetail = InitialDocumentDetail & {
@@ -197,7 +197,7 @@ export type DocumentListResponse = {
 export type DocumentReq = {
   original_document_id?: string
   indexing_technique?: string
-  doc_form: 'text_model' | 'qa_model'
+  doc_form: 'text_model' | 'qa_model' | 'row_qa_model'
   doc_language: string
   process_rule: ProcessRule
 }
@@ -329,7 +329,9 @@ export type SegmentDetailModel = {
   completed_at: number
   error: string | null
   stopped_at: number
-  answer?: string
+  answer?: string,
+  fileIds?: string,
+  fileCovers?: string
 }
 
 export type SegmentsResponse = {
@@ -417,6 +419,7 @@ export type SegmentUpdator = {
 export enum DocForm {
   TEXT = 'text_model',
   QA = 'qa_model',
+  ROWQA = 'row_qa_model',
 }
 
 export type ErrorDocsResponse = {

@@ -120,7 +120,7 @@ const translation = {
     helpCenter: '도움말 센터',
     roadmapAndFeedback: '로드맵 및 피드백',
     community: '커뮤니티',
-    about: 'Dify 소개',
+    about: 'Dream 소개',
     logout: '로그아웃',
   },
   settings: {
@@ -148,8 +148,8 @@ const translation = {
     newPassword: '새 비밀번호',
     confirmPassword: '비밀번호 확인',
     notEqual: '비밀번호가 일치하지 않습니다.',
-    langGeniusAccount: 'Dify 계정',
-    langGeniusAccountTip: 'Dify 계정과 관련된 사용자 데이터.',
+    langGeniusAccount: 'Dream 계정',
+    langGeniusAccountTip: 'Dream 계정과 관련된 사용자 데이터.',
     editName: '이름 편집',
     showAppLength: '{{length}}개의 앱 표시',
   },
@@ -362,9 +362,9 @@ const translation = {
     },
   },
   apiBasedExtension: {
-    title: 'API 기반 확장은 Dify 애플리케이션 전체에서 간편한 사용을 위한 설정을 단순화하고 집중적인 API 관리를 제공합니다.',
+    title: 'API 기반 확장은 Dream 애플리케이션 전체에서 간편한 사용을 위한 설정을 단순화하고 집중적인 API 관리를 제공합니다.',
     link: '사용자 정의 API 기반 확장을 개발하는 방법 배우기',
-    linkUrl: 'https://docs.dify.ai/features/extension/api_based_extension',
+    linkUrl: 'https://docs.dream.ai/features/extension/api_based_extension',
     add: 'API 기반 확장 추가',
     selector: {
       title: 'API 기반 확장',
@@ -393,8 +393,8 @@ const translation = {
   about: {
     changeLog: '변경 로그',
     updateNow: '지금 업데이트',
-    nowAvailable: 'Dify {{version}} 사용 가능합니다.',
-    latestAvailable: 'Dify {{version}} 최신 버전입니다.',
+    nowAvailable: 'Dream {{version}} 사용 가능합니다.',
+    latestAvailable: 'Dream {{version}} 최신 버전입니다.',
   },
   appMenus: {
     overview: '개요',

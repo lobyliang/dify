@@ -1,16 +1,16 @@
-'use client'
-import type { FC } from 'react'
-import { useTranslation } from 'react-i18next'
-import React, { useEffect } from 'react'
-import ToolProviderList from '@/app/components/tools/provider-list'
+"use client";
+import type { FC } from "react";
+import { useTranslation } from "react-i18next";
+import React, { useEffect } from "react";
+import ToolProviderList from "@/app/components/tools/provider-list";
 
 const Layout: FC = () => {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
 
   useEffect(() => {
-    document.title = `${t('tools.title')} - Dify`
-  }, [])
+    document.title = `${t("tools.title")} - Dream`;
+  }, []);
 
-  return <ToolProviderList />
-}
-export default React.memo(Layout)
+  return <ToolProviderList />;
+};
+export default React.memo(Layout);

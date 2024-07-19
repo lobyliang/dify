@@ -1,9 +1,7 @@
 .preview {
   display: none;
   position: absolute;
-  top: 0;
-  left: 100%;
-  transform: translate(32px, -54px);
+  transform: translate(480px, -54px);
   width: 280px;
   height: 360px;
   background: center center no-repeat;
@@ -20,15 +18,15 @@
 }
 
 .suggestedQuestionsAfterAnswerPreview {
-  background-image: url(./preview-imgs/suggested-questions-after-answer.png);
+  background-image: url(./preview-imgs/suggested-questions-after-answer.svg);
 }
 
 .moreLikeThisPreview {
-  background-image: url(./preview-imgs/more-like-this.png);
+  background-image: url(./preview-imgs/more-like-this.svg);
 }
 
 .speechToTextPreview {
-  background-image: url(./preview-imgs/speech-to-text.png);
+  background-image: url(./preview-imgs/speech-to-text.svg);
 }
 
 .textToSpeechPreview {
@@ -37,5 +35,5 @@
 }
 
 .citationPreview {
-  background-image: url(./preview-imgs/citation.png);
+  background-image: url(./preview-imgs/citation.svg);
 }

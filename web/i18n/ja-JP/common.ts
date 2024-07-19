@@ -319,7 +319,7 @@ const translation = {
   apiBasedExtension: {
     title: 'API拡張機能は、Difyのアプリケーション全体での簡単な使用のための設定を簡素化し、集中的なAPI管理を提供します。',
     link: '独自のAPI拡張機能を開発する方法について学ぶ。',
-    linkUrl: 'https://docs.dify.ai/features/extension/api_based_extension',
+    linkUrl: 'https://docs.dream.ai/features/extension/api_based_extension',
     add: 'API拡張機能を追加',
     selector: {
       title: 'API拡張機能',
@@ -348,8 +348,8 @@ const translation = {
   about: {
     changeLog: '変更ログ',
     updateNow: '今すぐ更新',
-    nowAvailable: 'Dify {{version}} が利用可能です。',
-    latestAvailable: 'Dify {{version}} が最新バージョンです。',
+    nowAvailable: 'Dream {{version}} が利用可能です。',
+    latestAvailable: 'Dream {{version}} が最新バージョンです。',
   },
   appMenus: {
     overview: '概要',

@@ -1,4 +1,4 @@
-import type { AnnotationReplyConfig, ChatPromptConfig, CompletionPromptConfig, DatasetConfigs, PromptMode } from '@/models/debug'
+import type { AnnotationReplyConfig, ChatPromptConfig, CompletionPromptConfig, DatasetConfigs, PromptMode, FuncSetting } from '@/models/debug'
 import type { CollectionType } from '@/app/components/tools/types'
 import type { LanguagesSupported } from '@/i18n/language'
 import type { Tag } from '@/app/components/base/tag-management/constant'
@@ -232,6 +232,7 @@ export type ModelConfig = {
   }
   files?: VisionFile[]
   created_at?: number
+  setting: FuncSetting
 }
 
 export type Language = typeof LanguagesSupported[number]
@@ -240,7 +241,7 @@ export type Language = typeof LanguagesSupported[number]
  * Web Application Configuration
  */
 export type SiteConfig = {
-  /** Application URL Identifier: `http://dify.app/{access_token}` */
+  /** Application URL Identifier: `http://dream.app/{access_token}` */
   access_token: string
   /** Public Title */
   title: string
@@ -381,4 +382,12 @@ export type RetrievalConfig = {
   top_k: number
   score_threshold_enabled: boolean
   score_threshold: number
+}
+
+export type ChatCategory = {
+  category: string
+  created_at: string
+  id: string
+  is_del: boolean
+  name: string
 }

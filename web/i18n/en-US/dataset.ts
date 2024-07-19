@@ -11,7 +11,7 @@ const translation = {
   datasetDeleted: 'Knowledge deleted',
   datasetDeleteFailed: 'Failed to delete Knowledge',
   didYouKnow: 'Did you know?',
-  intro1: 'The Knowledge can be integrated into the Dify application ',
+  intro1: 'The Knowledge can be integrated into the Dream application ',
   intro2: 'as a context',
   intro3: ',',
   intro4: 'or it ',
@@ -32,7 +32,7 @@ const translation = {
     },
     hybrid_search: {
       title: 'Hybrid Search',
-      description: 'Execute full-text search and vector searches simultaneously, re-rank to select the best match for the user\'s query. Configuration of the Rerank model APIs necessary.',
+      description: 'Execute full-text search and vector searches simultaneously, re-rank to select the best match for the user\'s query. Configuration of the Rerank model APIis necessary.',
       recommend: 'Recommend',
     },
     invertedIndex: {

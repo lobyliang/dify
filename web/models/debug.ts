@@ -224,3 +224,12 @@ export type SavedMessage = {
   id: string
   answer: string
 }
+
+export type FuncSetting = {
+  cmd: string
+  category: string
+  func_name: string
+  match_list: string[]
+  is_robot: boolean
+  chat_icon: string
+}

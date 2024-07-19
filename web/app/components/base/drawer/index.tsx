@@ -14,6 +14,7 @@ export type IDrawerProps = {
   mask?: boolean
   positionCenter?: boolean
   isOpen: boolean
+  // closable: boolean
   showClose?: boolean
   clickOutsideNotOpen?: boolean
   onClose: () => void

@@ -7,7 +7,10 @@ export let apiPrefix = ''
 export let publicApiPrefix = ''
 
 // NEXT_PUBLIC_API_PREFIX=/console/api NEXT_PUBLIC_PUBLIC_API_PREFIX=/api npm run start
-if (process.env.NEXT_PUBLIC_API_PREFIX && process.env.NEXT_PUBLIC_PUBLIC_API_PREFIX) {
+if (
+  process.env.NEXT_PUBLIC_API_PREFIX
+  && process.env.NEXT_PUBLIC_PUBLIC_API_PREFIX
+) {
   apiPrefix = process.env.NEXT_PUBLIC_API_PREFIX
   publicApiPrefix = process.env.NEXT_PUBLIC_PUBLIC_API_PREFIX
 }
@@ -16,24 +19,29 @@ else if (
   && globalThis.document?.body?.getAttribute('data-pubic-api-prefix')
 ) {
   // Not build can not get env from process.env.NEXT_PUBLIC_ in browser https://nextjs.org/docs/basic-features/environment-variables#exposing-environment-variables-to-the-browser
-  apiPrefix = globalThis.document.body.getAttribute('data-api-prefix') as string
-  publicApiPrefix = globalThis.document.body.getAttribute('data-pubic-api-prefix') as string
+  apiPrefix = globalThis.document.body.getAttribute(
+    'data-api-prefix',
+  ) as string
+  publicApiPrefix = globalThis.document.body.getAttribute(
+    'data-pubic-api-prefix',
+  ) as string
 }
 else {
   // const domainParts = globalThis.location?.host?.split('.');
-  // in production env, the host is dify.app . In other env, the host is [dev].dify.app
+  // in production env, the host is dream.app . In other env, the host is [dev].dream.app
   // const env = domainParts.length === 2 ? 'ai' : domainParts?.[0];
-  apiPrefix = 'http://localhost:5001/console/api'
-  publicApiPrefix = 'http://localhost:5001/api' // avoid browser private mode api cross origin
+  apiPrefix = '/console/api'
+  publicApiPrefix = '/api' // avoid browser private mode api cross origin
 }
 
 export const API_PREFIX: string = apiPrefix
 export const PUBLIC_API_PREFIX: string = publicApiPrefix
 
-const EDITION = process.env.NEXT_PUBLIC_EDITION || globalThis.document?.body?.getAttribute('data-public-edition') || 'SELF_HOSTED'
+const EDITION
+  = process.env.NEXT_PUBLIC_EDITION
+  || globalThis.document?.body?.getAttribute('data-public-edition')
+  || 'SELF_HOSTED'
 export const IS_CE_EDITION = EDITION === 'SELF_HOSTED'
-
-export const SUPPORT_MAIL_LOGIN = !!(process.env.NEXT_PUBLIC_SUPPORT_MAIL_LOGIN || globalThis.document?.body?.getAttribute('data-public-support-mail-login'))
 
 export const TONE_LIST = [
   {
@@ -244,4 +252,5 @@ Thought: {{agent_scratchpad}}
   `,
 }
 
-export const VAR_REGEX = /\{\{(#[a-zA-Z0-9_-]{1,50}(\.[a-zA-Z_][a-zA-Z0-9_]{0,29}){1,10}#)\}\}/gi
+export const VAR_REGEX
+  = /\{\{(#[a-zA-Z0-9_-]{1,50}(\.[a-zA-Z_][a-zA-Z0-9_]{0,29}){1,10}#)\}\}/gi

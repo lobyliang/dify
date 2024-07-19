@@ -1,16 +1,12 @@
-import type { FC } from 'react'
-import React from 'react'
+import type { FC } from "react";
+import React from "react";
 
 export type IAppDetail = {
-  children: React.ReactNode
-}
+  children: React.ReactNode;
+};
 
 const AppDetail: FC<IAppDetail> = ({ children }) => {
-  return (
-    <>
-      {children}
-    </>
-  )
-}
+  return <>{children}</>;
+};
 
-export default React.memo(AppDetail)
+export default React.memo(AppDetail);

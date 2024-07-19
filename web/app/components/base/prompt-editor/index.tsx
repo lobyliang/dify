@@ -1,51 +1,46 @@
-'use client'
+"use client";
 
-import type { FC } from 'react'
-import { useEffect } from 'react'
-import type {
-  EditorState,
-} from 'lexical'
-import {
-  $getRoot,
-  TextNode,
-} from 'lexical'
-import { CodeNode } from '@lexical/code'
-import { LexicalComposer } from '@lexical/react/LexicalComposer'
-import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin'
-import { ContentEditable } from '@lexical/react/LexicalContentEditable'
-import LexicalErrorBoundary from '@lexical/react/LexicalErrorBoundary'
-import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin'
-import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin'
+import type { FC } from "react";
+import { useEffect } from "react";
+import type { EditorState } from "lexical";
+import { $getRoot, TextNode } from "lexical";
+import { CodeNode } from "@lexical/code";
+import { LexicalComposer } from "@lexical/react/LexicalComposer";
+import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
+import { ContentEditable } from "@lexical/react/LexicalContentEditable";
+import LexicalErrorBoundary from "@lexical/react/LexicalErrorBoundary";
+import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
+import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 // import TreeView from './plugins/tree-view'
-import Placeholder from './plugins/placeholder'
-import ComponentPickerBlock from './plugins/component-picker-block'
+import Placeholder from "./plugins/placeholder";
+import ComponentPickerBlock from "./plugins/component-picker-block";
 import {
   ContextBlock,
   ContextBlockNode,
   ContextBlockReplacementBlock,
-} from './plugins/context-block'
+} from "./plugins/context-block";
 import {
   QueryBlock,
   QueryBlockNode,
   QueryBlockReplacementBlock,
-} from './plugins/query-block'
+} from "./plugins/query-block";
 import {
   HistoryBlock,
   HistoryBlockNode,
   HistoryBlockReplacementBlock,
-} from './plugins/history-block'
+} from "./plugins/history-block";
 import {
   WorkflowVariableBlock,
   WorkflowVariableBlockNode,
   WorkflowVariableBlockReplacementBlock,
-} from './plugins/workflow-variable-block'
-import VariableBlock from './plugins/variable-block'
-import VariableValueBlock from './plugins/variable-value-block'
-import { VariableValueBlockNode } from './plugins/variable-value-block/node'
-import { CustomTextNode } from './plugins/custom-text/node'
-import OnBlurBlock from './plugins/on-blur-or-focus-block'
-import UpdateBlock from './plugins/update-block'
-import { textToEditorState } from './utils'
+} from "./plugins/workflow-variable-block";
+import VariableBlock from "./plugins/variable-block";
+import VariableValueBlock from "./plugins/variable-value-block";
+import { VariableValueBlockNode } from "./plugins/variable-value-block/node";
+import { CustomTextNode } from "./plugins/custom-text/node";
+import OnBlurBlock from "./plugins/on-blur-or-focus-block";
+import UpdateBlock from "./plugins/update-block";
+import { textToEditorState } from "./utils";
 import type {
   ContextBlockType,
   ExternalToolBlockType,
@@ -53,32 +48,32 @@ import type {
   QueryBlockType,
   VariableBlockType,
   WorkflowVariableBlockType,
-} from './types'
+} from "./types";
 import {
   UPDATE_DATASETS_EVENT_EMITTER,
   UPDATE_HISTORY_EVENT_EMITTER,
-} from './constants'
-import { useEventEmitterContextContext } from '@/context/event-emitter'
+} from "./constants";
+import { useEventEmitterContextContext } from "@/context/event-emitter";
 
 export type PromptEditorProps = {
-  instanceId?: string
-  compact?: boolean
-  className?: string
-  placeholder?: string
-  placeholderClassName?: string
-  style?: React.CSSProperties
-  value?: string
-  editable?: boolean
-  onChange?: (text: string) => void
-  onBlur?: () => void
-  onFocus?: () => void
-  contextBlock?: ContextBlockType
-  queryBlock?: QueryBlockType
-  historyBlock?: HistoryBlockType
-  variableBlock?: VariableBlockType
-  externalToolBlock?: ExternalToolBlockType
-  workflowVariableBlock?: WorkflowVariableBlockType
-}
+  instanceId?: string;
+  compact?: boolean;
+  className?: string;
+  placeholder?: string;
+  placeholderClassName?: string;
+  style?: React.CSSProperties;
+  value?: string;
+  editable?: boolean;
+  onChange?: (text: string) => void;
+  onBlur?: () => void;
+  onFocus?: () => void;
+  contextBlock?: ContextBlockType;
+  queryBlock?: QueryBlockType;
+  historyBlock?: HistoryBlockType;
+  variableBlock?: VariableBlockType;
+  externalToolBlock?: ExternalToolBlockType;
+  workflowVariableBlock?: WorkflowVariableBlockType;
+};
 
 const PromptEditor: FC<PromptEditorProps> = ({
   instanceId,
@@ -99,9 +94,9 @@ const PromptEditor: FC<PromptEditorProps> = ({
   externalToolBlock,
   workflowVariableBlock,
 }) => {
-  const { eventEmitter } = useEventEmitterContextContext()
+  const { eventEmitter } = useEventEmitterContextContext();
   const initialConfig = {
-    namespace: 'prompt-editor',
+    namespace: "prompt-editor",
     nodes: [
       CodeNode,
       CustomTextNode,
@@ -115,41 +110,51 @@ const PromptEditor: FC<PromptEditorProps> = ({
       WorkflowVariableBlockNode,
       VariableValueBlockNode,
     ],
-    editorState: textToEditorState(value || ''),
+    editorState: textToEditorState(value || ""),
     onError: (error: Error) => {
-      throw error
+      throw error;
     },
-  }
+  };
 
   const handleEditorChange = (editorState: EditorState) => {
-    const text = editorState.read(() => $getRoot().getTextContent())
-    if (onChange)
-      onChange(text.replaceAll('\n\n', '\n'))
-  }
+    const text = editorState.read(() => $getRoot().getTextContent());
+    if (onChange) onChange(text.replaceAll("\n\n", "\n"));
+  };
 
   useEffect(() => {
     eventEmitter?.emit({
       type: UPDATE_DATASETS_EVENT_EMITTER,
       payload: contextBlock?.datasets,
-    } as any)
-  }, [eventEmitter, contextBlock?.datasets])
+    } as any);
+  }, [eventEmitter, contextBlock?.datasets]);
   useEffect(() => {
     eventEmitter?.emit({
       type: UPDATE_HISTORY_EVENT_EMITTER,
       payload: historyBlock?.history,
-    } as any)
-  }, [eventEmitter, historyBlock?.history])
+    } as any);
+  }, [eventEmitter, historyBlock?.history]);
 
   return (
     <LexicalComposer initialConfig={{ ...initialConfig, editable }}>
-      <div className='relative h-full'>
+      <div className="relative h-full">
         <RichTextPlugin
-          contentEditable={<ContentEditable className={`${className} outline-none ${compact ? 'leading-5 text-[13px]' : 'leading-6 text-sm'} text-gray-700`} style={style || {}} />}
-          placeholder={<Placeholder value={placeholder} className={placeholderClassName} compact={compact} />}
+          contentEditable={
+            <ContentEditable
+              className={`${className} outline-none ${compact ? "leading-5 text-[13px]" : "leading-6 text-sm"} text-gray-700`}
+              style={style || {}}
+            />
+          }
+          placeholder={
+            <Placeholder
+              value={placeholder}
+              className={placeholderClassName}
+              compact={compact}
+            />
+          }
           ErrorBoundary={LexicalErrorBoundary}
         />
         <ComponentPickerBlock
-          triggerString='/'
+          triggerString="/"
           contextBlock={contextBlock}
           historyBlock={historyBlock}
           queryBlock={queryBlock}
@@ -158,7 +163,7 @@ const PromptEditor: FC<PromptEditorProps> = ({
           workflowVariableBlock={workflowVariableBlock}
         />
         <ComponentPickerBlock
-          triggerString='{'
+          triggerString="{"
           contextBlock={contextBlock}
           historyBlock={historyBlock}
           queryBlock={queryBlock}
@@ -166,46 +171,36 @@ const PromptEditor: FC<PromptEditorProps> = ({
           externalToolBlock={externalToolBlock}
           workflowVariableBlock={workflowVariableBlock}
         />
-        {
-          contextBlock?.show && (
-            <>
-              <ContextBlock {...contextBlock} />
-              <ContextBlockReplacementBlock {...contextBlock} />
-            </>
-          )
-        }
-        {
-          queryBlock?.show && (
-            <>
-              <QueryBlock {...queryBlock} />
-              <QueryBlockReplacementBlock />
-            </>
-          )
-        }
-        {
-          historyBlock?.show && (
-            <>
-              <HistoryBlock {...historyBlock} />
-              <HistoryBlockReplacementBlock {...historyBlock} />
-            </>
-          )
-        }
-        {
-          (variableBlock?.show || externalToolBlock?.show) && (
-            <>
-              <VariableBlock />
-              <VariableValueBlock />
-            </>
-          )
-        }
-        {
-          workflowVariableBlock?.show && (
-            <>
-              <WorkflowVariableBlock {...workflowVariableBlock} />
-              <WorkflowVariableBlockReplacementBlock {...workflowVariableBlock} />
-            </>
-          )
-        }
+        {contextBlock?.show && (
+          <>
+            <ContextBlock {...contextBlock} />
+            <ContextBlockReplacementBlock {...contextBlock} />
+          </>
+        )}
+        {queryBlock?.show && (
+          <>
+            <QueryBlock {...queryBlock} />
+            <QueryBlockReplacementBlock />
+          </>
+        )}
+        {historyBlock?.show && (
+          <>
+            <HistoryBlock {...historyBlock} />
+            <HistoryBlockReplacementBlock {...historyBlock} />
+          </>
+        )}
+        {(variableBlock?.show || externalToolBlock?.show) && (
+          <>
+            <VariableBlock />
+            <VariableValueBlock />
+          </>
+        )}
+        {workflowVariableBlock?.show && (
+          <>
+            <WorkflowVariableBlock {...workflowVariableBlock} />
+            <WorkflowVariableBlockReplacementBlock {...workflowVariableBlock} />
+          </>
+        )}
         <OnChangePlugin onChange={handleEditorChange} />
         <OnBlurBlock onBlur={onBlur} onFocus={onFocus} />
         <UpdateBlock instanceId={instanceId} />
@@ -213,7 +208,7 @@ const PromptEditor: FC<PromptEditorProps> = ({
         {/* <TreeView /> */}
       </div>
     </LexicalComposer>
-  )
-}
+  );
+};
 
-export default PromptEditor
+export default PromptEditor;

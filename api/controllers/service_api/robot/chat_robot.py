@@ -212,10 +212,12 @@ class ChatRobot(Resource):
             cmd_app_model = db.session.query(App).filter(App.cmd == cmd).first()
             if (
                 cmd_app_model
-                and cmd_app_model.status != "normal"
+                and cmd_app_model.status == "normal"
                 and cmd_app_model.enable_api
             ):
                 app_model = cmd_app_model
+                if app_model.mode == AppMode.COMPLETION.value:
+                    args["inputs"]["query"]=args["query"]
 
         try:
             response = AppGenerateService.generate(

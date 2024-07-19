@@ -31,7 +31,7 @@ import {
 } from '@/service/tools'
 import { useModalContext } from '@/context/modal-context'
 import { useProviderContext } from '@/context/provider-context'
-import { ConfigurationMethodEnum } from '@/app/components/header/account-setting/model-provider-page/declarations'
+import { ConfigurateMethodEnum } from '@/app/components/header/account-setting/model-provider-page/declarations'
 import Loading from '@/app/components/base/loading'
 
 type Props = {
@@ -65,8 +65,8 @@ const ProviderDetail = ({
         setShowModelModal({
           payload: {
             currentProvider: provider,
-            currentConfigurationMethod: ConfigurationMethodEnum.predefinedModel,
-            currentCustomConfigurationModelFixedFields: undefined,
+            currentConfigurateMethod: ConfigurateMethodEnum.predefinedModel,
+            currentCustomConfigrationModelFixedFields: undefined,
           },
           onSaveCallback: () => {
             onRefreshData()
