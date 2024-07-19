@@ -474,8 +474,8 @@ class DatasetQuery(db.Model):
     source_app_id = db.Column(StringUUID, nullable=True)
     ####loby####
     like = db.Column(db.Integer, nullable=True, default=0)
+    dislike = db.Column(db.Integer, nullable=True, default=0)
     seg_ids=db.Column(db.JSON,nullable=True)
-    # dislike = db.Column(db.Integer, nullable=True, default=0)
     ############
     created_by_role = db.Column(db.String, nullable=False)
     created_by = db.Column(StringUUID, nullable=False)

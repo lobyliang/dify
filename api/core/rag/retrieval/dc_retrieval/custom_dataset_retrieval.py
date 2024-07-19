@@ -622,6 +622,8 @@ class CustomDataSetRetrieval:
                 source_app_id=app_id,
                 created_by_role=user_from,
                 created_by=user_id,
+                like=0,
+                dislike=0,
             )
             db.session.add(dataset_query)
         db.session.commit()
@@ -779,10 +781,17 @@ class CustomDataSetRetrieval:
 
         if is_like == 0:
             if seg_id in seg_ids:
-                rag_query.like = rag_query.like - seg_ids[seg_id]["like"]
+                if seg_ids[seg_id]["like"] == 1:
+                    rag_query.like = rag_query.like - 1
+                elif seg_ids[seg_id]["like"] == -1:
+                    rag_query.like = rag_query.dislike - 1
                 seg_ids.pop(seg_id)
         else:
-            rag_query.like = rag_query.like + is_like
+            if is_like == 1:
+                rag_query.like = rag_query.like + 1
+            elif is_like == -1:
+                rag_query.dislike = rag_query.dislike + 1
+            # rag_query.like = rag_query.like + is_like
             seg_ids[seg_id] = {
                 "rate": rate,
                 "like": is_like,
@@ -790,7 +799,14 @@ class CustomDataSetRetrieval:
         rag_query.seg_ids = seg_ids
         db.session.bulk_update_mappings(
             DatasetQuery,
-            [{"id": query_id, "like": rag_query.like, "seg_ids": rag_query.seg_ids}],
+            [
+                {
+                    "id": query_id,
+                    "like": rag_query.like,
+                    "dislike": rag_query.dislike,
+                    "seg_ids": rag_query.seg_ids,
+                }
+            ],
         )
         db.session.flush()
         # rag_query.dislike=rag_query.dislike + is_dislike
@@ -805,12 +821,14 @@ class CustomDataSetRetrieval:
                 DatasetQuery.content,
                 db.func.max(DatasetQuery.created_at).label("last_date"),
                 db.func.count(DatasetQuery.content).label("count"),
-                db.func.sum(
-                    db.case((DatasetQuery.like > 0, DatasetQuery.like), else_=0)
-                ).label("total_likes"),
-                db.func.sum(
-                    db.case((DatasetQuery.like < 0, DatasetQuery.like), else_=0)
-                ).label("total_dislikes"),
+                db.func.sum(DatasetQuery.like).label("total_likes"),
+                db.func.sum(DatasetQuery.dislike).label("total_dislikes"),
+                # db.func.sum(
+                #     db.case((DatasetQuery.like > 0, DatasetQuery.like), else_=0)
+                # ).label("total_likes"),
+                # db.func.sum(
+                #     db.case((DatasetQuery.like < 0, DatasetQuery.like), else_=0)
+                # ).label("total_dislikes"),
             )
             .filter(DatasetQuery.dataset_id == dataset_id)
             .group_by(DatasetQuery.content)
@@ -919,7 +937,7 @@ WITH seg_data AS (
   FROM
     public.dataset_queries dq
   WHERE
-    dq.dataset_id = '645f3f81-af00-420f-a5cd-e67fb25f1386'
+    dq.dataset_id = :dataset_id
   ORDER BY
     dq.created_at
 ),
@@ -956,7 +974,7 @@ FROM
   FROM
     public.dataset_queries dq
   WHERE
-    dq.dataset_id = '645f3f81-af00-420f-a5cd-e67fb25f1386'
+    dq.dataset_id = :dataset_id
   ORDER BY
     dq.created_at
 ),
@@ -1045,7 +1063,7 @@ limit :limit;
         query = (
             db.session.query(DatasetQuery)
             .filter(db.cast(DatasetQuery.seg_ids, JSONB).has_key(segment_id))
-            .order_by(DatasetQuery.created_at)
+            .order_by(DatasetQuery.created_at.desc())
             .limit(page_size)
             .offset((page_no - 1) * page_size)
         )
@@ -1062,6 +1080,7 @@ limit :limit;
                 "source": row.source,
                 "source_app_id": row.source_app_id,
                 "total_like": row.like,
+                "total_dislike": row.dislike,
                 "seg_ids": row.seg_ids,
                 "rate": row.seg_ids[segment_id]["rate"],
                 "like": row.seg_ids[segment_id]["like"],

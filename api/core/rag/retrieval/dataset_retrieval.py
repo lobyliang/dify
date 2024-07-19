@@ -337,7 +337,9 @@ class DatasetRetrieval:
                 source='app',
                 source_app_id=app_id,
                 created_by_role=user_from,
-                created_by=user_id
+                created_by=user_id,
+                like=0,
+                dislike=0,
             )
             dataset_queries.append(dataset_query)
         if dataset_queries:
