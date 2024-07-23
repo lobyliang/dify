@@ -455,3 +455,11 @@ class Config:
         self.DREAM_CLOUD_SECRET_KEY=get_env('DREAM_CLOUD_SECRET_KEY')
         self.DREAM_KEY_WORD_APP_UUID=get_env('DREAM_KEY_WORD_APP_UUID')
 
+        self.WECHAT_APP_ID=get_env('WECHAT_APP_ID')
+        self.WECHAT_APP_SECRET=get_env('WECHAT_APP_SECRET')
+
+        self.WECHAT_WEB_ID=get_env('WECHAT_WEB_ID')
+        self.WECHAT_WEB_SECRET=get_env('WECHAT_WEB_SECRET')
+
+        self.WECHAT_OPEN_ID=get_env('WECHAT_OPEN_ID')
+        self.WECHAT_OPEN_SECRET=get_env('WECHAT_OPEN_SECRET')

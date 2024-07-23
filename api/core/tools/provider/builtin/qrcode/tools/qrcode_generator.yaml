@@ -1,6 +1,6 @@
 identity:
   name: qrcode_generator
-  author: Bowen Liang
+  author: 梦软科技
   label:
     en_US: Generate QR Code
     zh_Hans: 生成二维码

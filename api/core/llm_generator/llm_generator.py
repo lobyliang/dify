@@ -161,12 +161,20 @@ class LLMGenerator:
             SystemPromptMessage(content=prompt),
             UserPromptMessage(content=query)
         ]
-
+        # model_instance.model_type_instance.get_parameter_rules(model_instance.credentials,model_instance.model)
+        max_tokens = 2000
+        try:
+            for rules in model_instance.model_type_instance.get_model_schema(model_instance.model,model_instance.credentials).parameter_rules:
+                if rules.name == "max_tokens":
+                    max_tokens = rules.default
+        except Exception as e:
+            logging.exception(e)
+        # model_instance.provider_model_bundle
         response = model_instance.invoke_llm(
             prompt_messages=prompt_messages,
             model_parameters={
                 'temperature': 0.01,
-                "max_tokens": 2000
+                "max_tokens": max_tokens
             },
             stream=False
         )

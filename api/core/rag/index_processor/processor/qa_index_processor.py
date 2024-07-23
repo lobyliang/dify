@@ -4,7 +4,7 @@ import re
 import threading
 import uuid
 from typing import Optional
-
+import time
 import pandas as pd
 from flask import Flask, current_app
 from werkzeug.datastructures import FileStorage
@@ -71,6 +71,7 @@ class QAIndexProcessor(BaseIndexProcessor):
                     'document_language': kwargs.get('doc_language', 'English')})
                 threads.append(document_format_thread)
                 document_format_thread.start()
+                time.sleep(10)
             for thread in threads:
                 thread.join()
         return all_qa_documents

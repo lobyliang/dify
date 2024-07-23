@@ -179,12 +179,14 @@ class BuildKeyWordsRAGApi(DatasetApiResource):
             parser.add_argument("top_k", type=int, required=False)
             parser.add_argument("score_threshold", type=int, required=False)
             parser.add_argument("rebuild", type=bool, required=False, default=False)
+            parser.add_argument("prompt", type=str, required=False)
             args = parser.parse_args()
             domain = args.get("domain")
             prefix = args.get("prefix")
             suffix = args.get("suffix")
             top_k = args.get("top_k")
             rebuild = args.get("rebuild")
+            prompt = args.get("prompt")
 
             score_threshold = args.get("score_threshold")
             dataset, document, count = KeyWordService.BuildKeyWordsRAG(
@@ -196,6 +198,7 @@ class BuildKeyWordsRAGApi(DatasetApiResource):
                 top_k,
                 score_threshold,
                 rebuild,
+                prompt,
             )
             return {
                 "dataset": marshal(dataset, dataset_fields),

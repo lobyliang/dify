@@ -268,7 +268,7 @@ if you are not sure about the structure.
         :param prompt_messages: prompt messages
         :return: llm response
         """
-        # transform assistant message to prompt message
+        # transform assistant 要改，没有choices message to prompt message
         assistant_prompt_message = AssistantPromptMessage(
             content=response.output.choices[0].message.content,
         )

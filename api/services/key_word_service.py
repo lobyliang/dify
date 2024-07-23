@@ -329,6 +329,7 @@ class KeyWordService:
         top_k: int = 10,
         score_threshold: float = 0.4,
         rebuild: bool = False,
+        prompt:str=None,
     ) -> None:
         try:
             root_id = KeyWordService.GetDomainRoot(tenant_id, domain)
@@ -462,7 +463,7 @@ class KeyWordService:
 
                 leafs = KeyWordService.GetAllLeafs(tenant_id, root_id)
                 key_word_indexing_task.dely(
-                    tenant_id, dataset.id, documents[0].id, root_id, prefix, suffix
+                    tenant_id, dataset.id, documents[0].id, root_id, prefix, suffix,prompt
                 )
                 # for keyword in leafs:
                 #     arg={
