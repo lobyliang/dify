@@ -398,7 +398,7 @@ class AppService:
 
         app_was_deleted.send(app)
 
-        # todo async delete related data by event
+        # TODO async delete related data by event
         # app_model_configs, site, api_tokens, installed_apps, recommended_apps BY app
         # app_annotation_hit_histories, app_annotation_settings, app_dataset_joins BY app
         # workflows, workflow_runs, workflow_node_executions, workflow_app_logs BY app

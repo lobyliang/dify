@@ -4,16 +4,12 @@ import time
 import click
 from celery import shared_task
 
-from controllers.console.app.error import ProviderNotInitializeError
-from core.errors.error import ProviderTokenNotInitError
 from core.model_manager import ModelManager
 from core.model_runtime.entities.message_entities import SystemPromptMessage, UserPromptMessage
 from core.model_runtime.entities.model_entities import ModelType
-from core.model_runtime.errors.invoke import InvokeAuthorizationError
 from extensions.ext_database import db
 from models.dataset import Dataset, Document
 from services.dataset_service import SegmentService
-from services.model_provider_service import ModelProviderService
 
 # 构建知识库提示词
 # # 角色
@@ -93,7 +89,7 @@ def key_word_indexing_task(tenant_id: str,dataset_id:str,document_id:str,root_id
         if not document:
             logging.warning(click.style(f'document {document_id} not found',fg='red'))
             return
-        from services.key_word_service import KeyWordService
+        from services.dc_key_word_service import KeyWordService
         leafs = KeyWordService.GetAllLeafs(tenant_id,root_id)
         for keyword in leafs:
             if prompt:

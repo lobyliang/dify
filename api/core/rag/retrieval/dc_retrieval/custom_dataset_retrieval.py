@@ -257,6 +257,7 @@ class CustomDataSetRetrieval:
         top_k: Optional[int] = None,
         score_threshold: Optional[float] = None,
         reranking_enable: Optional[bool] = True,
+        # attach_detail: Optional[bool] = False,
         #  reranking_model: Optional[dict] = None
     ) -> Optional[str]:
         if not CustomDataSetRetrieval.tenant_count:
@@ -1042,7 +1043,7 @@ limit :limit;
                 "hit_count": row[7],
                 "answer": row[8],
                 "updated_by": row[9],
-                "updated_at": row[10].strftime("%Y-%m-%d %H:%M:%S") if row[4] else None,
+                "updated_at": row[10].strftime("%Y-%m-%d %H:%M:%S") if row[10] else None,
                 "seg_likes": row[11],
                 "seg_dislikes": row[12],
             }

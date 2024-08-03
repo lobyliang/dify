@@ -42,7 +42,7 @@ from extensions import (
 from extensions.ext_database import db
 from extensions.ext_login import login_manager
 from libs.passport import PassportService
-from models import account, dataset, model, source, task, tool, tools, web,dc_models
+from models import account, dataset, model, source, task, tool, tools, web,dc_models,dc_wechat_app
 from services.account_service import AccountService
 
 # DO NOT REMOVE ABOVE

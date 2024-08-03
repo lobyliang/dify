@@ -7,7 +7,7 @@ from hashlib import sha256
 from typing import Any, Optional
 
 from flask import current_app
-from sqlalchemy import func
+from sqlalchemy import func, text
 from werkzeug.exceptions import Unauthorized
 
 from constants.languages import language_timezone_mapping, languages
@@ -208,6 +208,31 @@ class TenantService:
 
     ###loby####
     @staticmethod
+    def get_extent_tenant_count(ext_tenant_id:str)->int:
+        query=text("""
+            SELECT 
+            count(*)
+            from tenants
+            where (custom_config::jsonb)->>'extent_tenant_id' =:ext_tenant_id """)
+        count = 0
+        try:
+            count1 = db.session.execute(query,{"ext_tenant_id":ext_tenant_id}).fetchone()
+            count = count1[0]
+        except Exception as e:
+            logging.exception(f'Failed to get extent tenant count',e)
+        return count
+
+    @staticmethod
+    def is_tenant_creater(account_id:str,tenant_id:str) -> tuple[str,bool]:
+        owner = TenantService.get_tenant_creater(tenant_id)
+        account = AccountService.load_user(account_id)
+        if not account:
+            return {"message": "please login first"},False
+        if owner.name.strip() != account.name.strip():
+            return {"message": "Permission denided"},False
+        return "ok",True
+    
+    @staticmethod
     def get_tenant_creater(tenant_id:str) -> Account:
         """Get tenant count"""
         tenantAccount = db.session.query(TenantAccountJoin).filter(
@@ -232,15 +257,16 @@ class TenantService:
         return tenant
 
     @staticmethod
-    def create_owner_tenant_if_not_exist(account: Account):
+    def create_owner_tenant_if_not_exist(account: Account,tenant_name:str=None):
         """Create owner tenant if not exist"""
         available_ta = TenantAccountJoin.query.filter_by(account_id=account.id) \
             .order_by(TenantAccountJoin.id.asc()).first()
 
         if available_ta:
             return
-
-        tenant = TenantService.create_tenant(f"{account.name}'s Workspace")
+        if not tenant_name:
+            tenant_name = f"{account.name}'s Workspace"
+        tenant = TenantService.create_tenant(tenant_name)
         TenantService.create_tenant_member(tenant, account, role='owner')
         account.current_tenant = tenant
         db.session.commit()

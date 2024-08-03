@@ -1,3 +1,4 @@
+from email.policy import default
 import logging
 from flask_restful import fields
 
@@ -91,6 +92,9 @@ class RAGQueryApi(DatasetApiResource):
         parser.add_argument(
             "show_source", type=bool, required=True, nullable=False, location="json"
         )
+        parser.add_argument(
+            "attach_detail", type=bool, required=False, nullable=True,default=False, location="json"
+        )
         args = parser.parse_args()
         user_id = args["user_id"]
         app_id = args["app_id"]
@@ -102,6 +106,7 @@ class RAGQueryApi(DatasetApiResource):
         show_source = args["show_source"]
         tok_k = args["top_k"]
         score_threshold = args["score_threshold"]
+        attach_detail = args["attach_detail"]
         # get dataset
         custom_dataset_retrieval = CustomDataSetRetrieval()
         return (
@@ -119,6 +124,7 @@ class RAGQueryApi(DatasetApiResource):
                 top_k=tok_k,
                 score_threshold=score_threshold,
                 hit_callback=None,
+                # attach_detail=attach_detail,
             ),
             200,
         )

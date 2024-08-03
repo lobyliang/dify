@@ -475,7 +475,7 @@ class DatasetQuery(db.Model):
     ####loby####
     like = db.Column(db.Integer, nullable=True, default=0)
     dislike = db.Column(db.Integer, nullable=True, default=0)
-    seg_ids=db.Column(db.JSON,nullable=True)
+    seg_ids=db.Column(db.JSON,nullable=True,comment='seg_id,和匹配精度')
     ############
     created_by_role = db.Column(db.String, nullable=False)
     created_by = db.Column(StringUUID, nullable=False)

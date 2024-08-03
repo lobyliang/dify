@@ -80,23 +80,25 @@ class DocumentSegmentsAttach(db.Model):
 
 
 # TODO 用于知识库查询的不同提示词配置，还未处理，lobyliang
-class DocumentPrompt(db.Model):
-    __tablename__ = "document_prompts"
-    __table_args__ = (db.PrimaryKeyConstraint("id", name="document_prompt_pkey"),)
-    id = db.Column(
-        StringUUID, nullable=False, server_default=db.text("uuid_generate_v4()")
-    )
-    tenant_id = db.Column(StringUUID, nullable=True)
-    prompt = db.Column(db.String(1024), nullable=False)
-    variable = db.Column(db.String(1024), nullable=False)
-    created_by = db.Column(db.String(64), nullable=False)
-    created_at = db.Column(
-        db.DateTime, nullable=False, server_default=db.text("CURRENT_TIMESTAMP(0)")
-    )
-    updated_by = db.Column(db.String(64), nullable=True)
-    updated_at = db.Column(
-        db.DateTime, nullable=True, server_default=db.text("CURRENT_TIMESTAMP(0)")
-    )
+# TODO 不同的知识库文件，调用AI时采用不同的提示词进行回答
+# class DocumentPrompt(db.Model):
+#     __tablename__ = "document_prompts"
+#     __table_args__ = (db.PrimaryKeyConstraint("id", name="document_prompt_pkey"),)
+#     id = db.Column(
+#         StringUUID, nullable=False, server_default=db.text("uuid_generate_v4()")
+#     )
+#     tenant_id = db.Column(StringUUID, nullable=True)
+#     prompt = db.Column(db.String(1024), nullable=False)
+#     variable = db.Column(db.String(1024), nullable=False)
+#     document_id = db.Column(StringUUID, nullable=False)
+#     created_by = db.Column(db.String(64), nullable=False)
+#     created_at = db.Column(
+#         db.DateTime, nullable=False, server_default=db.text("CURRENT_TIMESTAMP(0)")
+#     )
+#     updated_by = db.Column(db.String(64), nullable=True)
+#     updated_at = db.Column(
+#         db.DateTime, nullable=True, server_default=db.text("CURRENT_TIMESTAMP(0)")
+#     )
 
 
 class DocKeyWords(db.Model):
@@ -113,8 +115,8 @@ class DocKeyWords(db.Model):
     tenant_id = db.Column(StringUUID, nullable=True)
     key_word = db.Column(db.String(64), nullable=False)
     category = db.Column(db.String(255), nullable=True)
-    domain = db.Column(db.String(255), nullable=True)
-    created_by = db.Column(db.String(255), nullable=False)
+    domain = db.Column(db.String(255), nullable=True,comment='岗位、技能、行业')
+    created_by = db.Column(db.String(255), nullable=True)
     created_at = db.Column(
         db.DateTime, nullable=False, server_default=db.text("CURRENT_TIMESTAMP(0)")
     )
@@ -126,7 +128,7 @@ class DocKeyWordsClosure(db.Model):
         db.PrimaryKeyConstraint(
             "ancestor_id", "descendant_id", name="key_words_closure_pkey"
         ),
-        db.Index("key_words_closure_index_tenant", "tenant_id", unique=False),
+        db.Index("key_words_closure_index_tenant", "tenant_id",unique=False),
     )
     ancestor_id = db.Column(StringUUID, nullable=False, primary_key=True)
     descendant_id = db.Column(StringUUID, nullable=False, primary_key=True)

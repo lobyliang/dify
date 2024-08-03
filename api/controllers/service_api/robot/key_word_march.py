@@ -9,7 +9,7 @@ from controllers.service_api.wraps import DatasetApiResource
 from fields.dataset_fields import dataset_fields
 from libs.login import current_user
 from fields.document_fields import document_fields
-from services.key_word_service import KeyWordService
+from services.dc_key_word_service import KeyWordService
 
 
 def parse_list_of_dicts(value):

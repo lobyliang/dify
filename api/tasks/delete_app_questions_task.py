@@ -3,7 +3,8 @@ import time
 
 import click
 from celery import shared_task
-
+from weaviate import UnexpectedStatusCodeException
+from requests.exceptions import ConnectionError as RequestsConnectionError
 from core.rag.datasource.vdb.dc_vector_factory import DCVector
 from extensions.ext_database import db
 from extensions.ext_redis import redis_client
@@ -21,13 +22,24 @@ def dc_delete_app_questions_task(tenant_id: str):
         questions = db.session.query(AppQuestions).filter(AppQuestions.status == 'deleted', AppQuestions.tenant_id == tenant_id).all()
         # ids = [question.id for question in questions]
         for question in questions:
+            can_del = True
             try:
                 vector.delete_by_ids([question.id])
-                db.session.query(AppQuestions).filter(AppQuestions.status == 'deleted', AppQuestions.tenant_id == tenant_id,AppQuestions.id== question.id).delete(synchronize_session=False)
-                db.session.flush()
+            except UnexpectedStatusCodeException as e1:
+                logging.exception(f"App问题:[{question.id}]删除任务 failed(ID不存在):{e1}")
+            except RequestsConnectionError as e2:
+                logging.exception(f"App问题:[{question.id}]删除任务 failed(连接失败):{e2}")
+                can_del = False
             except Exception as e:
                 logging.exception(f"App问题:[{question.id}]删除任务 failed:{e}")
-        # db.session.query(AppQuestions).filter(AppQuestions.status == 'deleted', AppQuestions.tenant_id == tenant_id,AppQuestions.id.in_(ids)).delete(synchronize_session=False)
+
+            try:
+                if can_del:
+                    db.session.query(AppQuestions).filter(AppQuestions.status == 'deleted', AppQuestions.tenant_id == tenant_id,AppQuestions.id== question.id).delete(synchronize_session=False)
+                    db.session.flush()
+            except Exception as e:
+                logging.exception(f"App问题:[{question.id}]删除任务 failed:{e}")
+            # db.session.query(AppQuestions).filter(AppQuestions.status == 'deleted', AppQuestions.tenant_id == tenant_id,AppQuestions.id.in_(ids)).delete(synchronize_session=False)
         db.session.commit()
         redis_client.setex(indexing_cache_key, 600, 'completed')
         end_at = time.perf_counter()

@@ -245,6 +245,19 @@ class TenantManage(Resource):
         parser.add_argument(
             "token", type=str, required=False, nullable=True, location="json"
         )
+        parser.add_argument(
+            "extent_tenant_name",
+            type=str,
+            required=False,
+            nullable=True,
+            location="json",
+        )
+        parser.add_argument(
+            "extent_user_id", type=str, required=False, nullable=True, location="json"
+        )
+        parser.add_argument(
+            "extent_tenant_id", type=str, required=False, nullable=True, location="json"
+        )
         args = parser.parse_args()
         email = args["email"]
         try:
@@ -258,9 +271,18 @@ class TenantManage(Resource):
             # 'baseUserId': 1795021603947073538}
             passportService = PassportService()
             passportService.sk = current_app.config["DREAM_CLOUD_SECRET_KEY"]
-            token = passportService.verify(args["token"])
-            ext_user_id = token["userId"]
-            ext_tenant_id = token["tenantId"]
+            if args["token"]:
+                token = passportService.verify(args["token"])
+                ext_user_id = token["userId"]
+                ext_tenant_id = token["tenantId"]
+            elif args["extent_tenant_id"] and args["extent_user_id"]:
+                ext_user_id = args["extent_user_id"]
+                ext_tenant_id = args["extent_tenant_id"]
+                ext_tenant_name = args["extent_tenant_name"]
+            else:
+                return {
+                    "message": f"token or extent_tenant_id and extent_user_id must be set"
+                }, 400
         except Exception as e:
             return {"message": f"Unauthorized:{e}"}, 400
 
@@ -268,40 +290,50 @@ class TenantManage(Resource):
             return "user name must be set", 400
         if not email:
             email = (
-                args["user_name"]
+                f"""{args["user_name"]}"""
                 + "@"
                 + current_app.config["DEFAULT_DERAM_CLOUD_EMAIL_DOMAIN"]
             )
 
         try:
             old_account = (
-                db.session.query(Account).filter(Account.email == args["email"]).first()
+                db.session.query(Account).filter(Account.email == email).first()
             )
             if old_account:
-                return f"Account {email} aready exits", 400
-            password = "qwer1234"
-            if args["password"]:
-                password = args["password"]
-            account = RegisterService.register(
-                email=email,
-                name=args["user_name"],
-                password=password,
-                open_id=None,
-                provider=None,
-            )
+                # return f"Account {email} aready exits", 400
+                hasTenant = TenantService.get_extent_tenant_count(ext_tenant_id)
+                if hasTenant > 0:
+                    return f"Tenant {email} aready exits", 400
+                if not ext_tenant_name:
+                    ext_tenant_name = f"{old_account.name}_{ext_tenant_id}'s Workspace"
+                tenant = TenantService.create_tenant(ext_tenant_name)
+                TenantService.create_tenant_member(tenant, old_account, "owner")
+                account = old_account
+            else:
+                password = "qwer1234"
+                if args["password"]:
+                    password = args["password"]
+                account = RegisterService.register(
+                    email=email,
+                    name=args["user_name"],
+                    password=password,
+                    open_id=None,
+                    provider=None,
+                )
 
-            account.interface_language = "chinese"
-            account.status = AccountStatus.ACTIVE.value
-            account.initialized_at = datetime.now(timezone.utc).replace(tzinfo=None)
-            db.session.commit()
-            TenantService.create_owner_tenant_if_not_exist(account)
-            tenants = TenantService.get_join_tenants(account)
-            tenant = tenants[0]
+                account.interface_language = "chinese"
+                account.status = AccountStatus.ACTIVE.value
+                account.initialized_at = datetime.now(timezone.utc).replace(tzinfo=None)
+                db.session.commit()
+                TenantService.create_owner_tenant_if_not_exist(account,ext_tenant_name)
+                tenants = TenantService.get_join_tenants(account)
+                tenant = tenants[0]
 
             custom_config = {"user_name": args["user_name"]}
-            if args["token"]:
-                custom_config["extent_tenant_id"] = ext_tenant_id
-                custom_config["extent_user_id"] = ext_user_id
+            # if args["token"]:
+            custom_config["extent_tenant_id"] = ext_tenant_id
+            custom_config["extent_user_id"] = ext_user_id
+            custom_config["ext_tenant_name"] = ext_tenant_name
             tenant.custom_config = json.dumps(custom_config)
             db.session.commit()
 

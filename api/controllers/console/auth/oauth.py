@@ -8,7 +8,7 @@ from flask_restful import Resource
 
 from constants.languages import languages
 from extensions.ext_database import db
-from libs.oauth import GitHubOAuth, GoogleOAuth, OAuthUserInfo, WeChatAppOAuth, WeChatOpenOAuth, WeChatWebOAuth
+from libs.oauth import GitHubOAuth, GoogleOAuth, OAuthUserInfo
 from models.account import Account, AccountStatus
 from services.account_service import AccountService, RegisterService, TenantService
 
@@ -29,30 +29,30 @@ def get_oauth_providers():
                                    redirect_uri=current_app.config.get(
                                        'CONSOLE_API_URL') + '/console/api/oauth/authorize/google')
         #########lobyliang###################
-        wechat_app_oauth=WeChatAppOAuth(client_id=current_app.config.get('WECHAT_APP_ID'),
-                                        client_secret=current_app.config.get(
-                                            'WECHAT_APP_SECRET'),
-                                        redirect_uri=current_app.config.get(
-                                            'CONSOLE_API_URL') + '/console/api/oauth/authorize/wechatapp')
-        wechat_web_oauth=WeChatWebOAuth(client_id=current_app.config.get('WECHAT_WEB_ID'),
-                                        client_secret=current_app.config.get(
-                                            'WECHAT_WEB_SECRET'),
-                                        redirect_uri=current_app.config.get(
-                                            'CONSOLE_API_URL') + '/console/api/oauth/authorize/wechatweb')
-        wechat_open_oauth=WeChatOpenOAuth(client_id=current_app.config.get('WECHAT_OPEN_ID'),
-                                        client_secret=current_app.config.get(
-                                            'WECHAT_OPEN_SECRET'),
-                                        redirect_uri=current_app.config.get(
-                                            'CONSOLE_API_URL') + '/console/api/oauth/authorize/wechatopen')
+        # wechat_app_oauth=WeChatAppOAuth(client_id=current_app.config.get('WECHAT_APP_ID'),
+        #                                 client_secret=current_app.config.get(
+        #                                     'WECHAT_APP_SECRET'),
+        #                                 redirect_uri=current_app.config.get(
+        #                                     'CONSOLE_API_URL') + '/console/api/oauth/authorize/wechatapp')
+        # wechat_web_oauth=WeChatWebOAuth(client_id=current_app.config.get('WECHAT_WEB_ID'),
+        #                                 client_secret=current_app.config.get(
+        #                                     'WECHAT_WEB_SECRET'),
+        #                                 redirect_uri=current_app.config.get(
+        #                                     'CONSOLE_API_URL') + '/console/api/oauth/authorize/wechatweb')
+        # wechat_open_oauth=WeChatOpenOAuth(client_id=current_app.config.get('WECHAT_OPEN_ID'),
+        #                                 client_secret=current_app.config.get(
+        #                                     'WECHAT_OPEN_SECRET'),
+        #                                 redirect_uri=current_app.config.get(
+        #                                     'CONSOLE_API_URL') + '/console/api/oauth/authorize/wechatopen')
         
         ##########lobyliang###################
 
         OAUTH_PROVIDERS = {
             'github': github_oauth,
             'google': google_oauth,
-            'wechatapp':wechat_app_oauth,
-            'wechatweb':wechat_web_oauth,
-            'wechatopen':wechat_open_oauth,
+            # 'wechatapp':wechat_app_oauth,
+            # 'wechatweb':wechat_web_oauth,
+            # 'wechatopen':wechat_open_oauth,
         }
         return OAUTH_PROVIDERS
 

@@ -113,8 +113,7 @@ class ChunkAttachFileInfosApi(DatasetApiResource):
         返回:
         返回调用FileService.get_chunck_attach_files_info方法的结果，该方法用于获取指定文档段落ID的附件信息。
         """
-        print("AAA:", str(tenant_id), type(tenant_id), doc_seg_id)
-        print("DDD:", str(self), type(self))
+
         return FileInfoService.get_chunck_attach_files_info(doc_seg_id)
 
 
@@ -212,6 +211,7 @@ class ChunkAttachFileDownloadApi(DatasetApiResource):
             raise e
 
         return Response(generator, mimetype=mimetype)
+
 
 
 api.add_resource(ChunckFileApi, "/chunckAttach/files/upload")

@@ -12,6 +12,7 @@ from werkzeug.exceptions import Forbidden, Unauthorized
 
 from extensions.ext_database import db
 from libs.login import _get_user
+from libs.passport import PassportService
 from models.account import Account, Tenant, TenantAccountJoin, TenantStatus
 from models.model import ApiToken, App, EndUser
 from services.feature_service import FeatureService
@@ -106,6 +107,89 @@ def dream_validate_cmd_token(view: Optional[Callable] = None, *, fetch_user_arg:
         return decorator
     else:
         return decorator(view)
+    
+########解析微信小程序的token
+def dream_validate_and_get_wechat_jwt_token():
+    """
+    Validate and get API token.
+    """
+    auth_header = request.headers.get('wechat-token')
+    if auth_header is None or ' ' not in auth_header:
+        raise Unauthorized("Authorization header must be provided and start with 'Bearer'")
+
+    auth_scheme, auth_token = auth_header.split(None, 1)
+    auth_scheme = auth_scheme.lower()
+
+    if auth_scheme != 'jwt':
+        raise Unauthorized("Authorization scheme must be 'JWT'")
+
+        #     payload = {
+        #     "user_id": account.id,
+        #     "exp": datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=30),
+        #     "iss": current_app.config['EDITION'],
+        #     "sub": 'Console API Passport',
+        # }
+
+    account = PassportService().verify(auth_token)
+    
+
+    if not account:
+        raise Unauthorized("Access token is invalid")
+
+    return account
+
+def dream_validate_wechat_jwt_token(view: Optional[Callable] = None, *, fetch_user_arg: Optional[FetchUserArg] = None):
+    def decorator(view_func):
+        @wraps(view_func)
+        def decorated_view(*args, **kwargs):
+            account = dream_validate_and_get_wechat_jwt_token()
+
+            if not account:
+                raise Forbidden("The JWT token is invalid.")
+
+            kwargs['account'] = account
+
+            return view_func(*args, **kwargs)
+        return decorated_view
+
+    if view is None:
+        return decorator
+    else:
+        return decorator(view)
+    
+#     # 同时检测app token和微信token
+# def dream_validate_app_and_wechat_jwt_token(view: Optional[Callable] = None, *, fetch_user_arg: Optional[FetchUserArg] = None):
+#     def decorator(view_func):
+#         @wraps(view_func)
+#         def decorated_view(*args, **kwargs):
+#             account = dream_validate_and_get_wechat_jwt_token()
+
+#             if not account:
+#                 raise Forbidden("The JWT token is invalid.")
+
+#             kwargs['account'] = account
+
+#             api_token = validate_and_get_api_token('app')
+
+#             app_model = db.session.query(App).filter(App.id == api_token.app_id).first()
+#             if not app_model:
+#                 raise Forbidden("The app no longer exists.")
+
+#             if app_model.status != 'normal':
+#                 raise Forbidden("The app's status is abnormal.")
+
+#             if not app_model.enable_api:
+#                 raise Forbidden("The app's API service has been disabled.")
+
+#             kwargs['app_model'] = app_model
+
+#             return view_func(*args, **kwargs)
+#         return decorated_view
+
+#     if view is None:
+#         return decorator
+#     else:
+#         return decorator(view)    
 ########################################################
 def validate_app_token(view: Optional[Callable] = None, *, fetch_user_arg: Optional[FetchUserArg] = None):
     def decorator(view_func):

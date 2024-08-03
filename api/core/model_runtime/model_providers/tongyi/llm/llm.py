@@ -269,9 +269,12 @@ if you are not sure about the structure.
         :return: llm response
         """
         # transform assistant 要改，没有choices message to prompt message
-        assistant_prompt_message = AssistantPromptMessage(
-            content=response.output.choices[0].message.content,
-        )
+        if not response.output.choices:
+            assistant_prompt_message = AssistantPromptMessage(
+            content="服务器忙，请稍后重试！",)
+        else:
+            assistant_prompt_message = AssistantPromptMessage(
+                content=response.output.choices[0].message.content,)
 
         # transform usage
         usage = self._calc_response_usage(model, credentials, response.usage.input_tokens, response.usage.output_tokens)

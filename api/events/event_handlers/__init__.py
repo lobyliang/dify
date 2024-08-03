@@ -10,3 +10,5 @@ from .delete_workflow_as_tool_when_app_deleted import handle
 from .update_app_dataset_join_when_app_model_config_updated import handle
 from .update_app_dataset_join_when_app_published_workflow_updated import handle
 from .update_provider_last_used_at_when_messaeg_created import handle
+####lobyliang######
+from .dc_delete_dataset_join_when_app_deleted import handle
