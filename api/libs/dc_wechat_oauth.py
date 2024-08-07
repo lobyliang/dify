@@ -5,9 +5,11 @@ import json
 from flask import current_app
 
 from libs.oauth import OAuth, OAuthUserInfo
+from services.dc_wechat_app_account_service import WeChatAppAccountService
+from services.dc_wechat_tenant_info_service import WeChatAppType, WechatTenantInfoService
 
 
-class WeChatAppOAuth(OAuth):
+class WeChatMiniAppOAuth(OAuth):
     # _AUTH_URL = 'https://open.weixin.qq.com/connect/qrconnect'
     # _AUTH_URL = 'https://api.weixin.qq.com/cgi-bin/token'
     # _TOKEN_URL = 'https://api.weixin.qq.com/sns/oauth2/access_token'
@@ -34,52 +36,58 @@ class WeChatAppOAuth(OAuth):
     #     return f"{self._AUTH_URL}?{urllib.parse.urlencode(params)}"
     
     @staticmethod
-    def get_api_token():
-        access_token = redis_client.get('wechat_app_token')
+    def get_api_token(tenant_id:str,wechat_app_id:str):
+        access_token = redis_client.get(f'wechat_app_token_{wechat_app_id}')
         if access_token:
             return access_token.decode()
+        wechat_app_secret = WechatTenantInfoService.get_wechat_tenant_info(tenant_id,wechat_app_id,"app")
+        if wechat_app_secret is None:
+            raise ValueError("微信小程序未注册")
         data = {
             'grant_type': 'client_credential',
-            'appid': current_app.config.get('WECHAT_APP_ID'),
-            'secret': current_app.config.get('WECHAT_APP_SECRET')
+            'appid':wechat_app_secret.get("app_id"),  #current_app.config.get('WECHAT_APP_ID'),
+            'secret':wechat_app_secret.get("app_secret") #current_app.config.get('WECHAT_APP_SECRET')
         }
         headers = {'Accept': 'application/json'}
-        response = requests.get(WeChatAppOAuth._API_TOKEN_URL, params=data, headers=headers)
+        response = requests.get(WeChatMiniAppOAuth._API_TOKEN_URL, params=data, headers=headers)
         response_json = response.json()
         if 'errcode' in response_json:
             raise ValueError()
         access_token = response_json.get('access_token')
         expires_in = response_json.get('expires_in')
-        redis_client.setex('wechat_app_token', expires_in, access_token)
+        redis_client.setex(f'wechat_app_token_{wechat_app_id}', expires_in, access_token)
         return access_token
 
     @staticmethod
-    def get_access_token(code: str):
+    def get_access_token(tenant_id:str,wechat_app_id:str,code: str):
+        wechat_app_secret = WechatTenantInfoService.get_wechat_tenant_info(tenant_id,wechat_app_id,WeChatAppType.WECHAT_MINI_APP)
+        if wechat_app_secret is None:
+            raise ValueError("微信小程序未注册")
         data = {
-            'appid': current_app.config.get('WECHAT_APP_ID'),
-            'secret': current_app.config.get('WECHAT_APP_SECRET'),
+            'appid':wechat_app_secret.get("app_id"),  #current_app.config.get('WECHAT_APP_ID'),
+            'secret':wechat_app_secret.get("app_secret"), #current_app.config.get('WECHAT_APP_SECRET'),
             'js_code': code,
             'grant_type': 'authorization_code'
         }
         headers = {'Accept': 'application/json'}
         # response = requests.post(self._TOKEN_URL, data=data, headers=headers)
-        response = requests.get(WeChatAppOAuth._TOKEN_URL, params=data, headers=headers)
+        response = requests.get(WeChatMiniAppOAuth._TOKEN_URL, params=data, headers=headers)
         response_json = response.json()
 
         if 'errcode' in response_json:
             raise ValueError(f"Error in WeChat OAuth: {response_json}")
         return response_json#.get('access_token')
     
-    @staticmethod
-    def get_raw_user_info(tokenDict):
-        token = WeChatAppOAuth.get_api_token()
-        openid = tokenDict.get('openid',None)
-        session_key = tokenDict.get('session_key',None)
-        unionid = tokenDict.get('unionid',None)
-        headers = {'Authorization': f"Bearer {token}"}
-        response = requests.get(WeChatAppOAuth._USER_INFO_URL, headers=headers)
-        response.raise_for_status()
-        return response.json()
+    # @staticmethod
+    # def get_raw_user_info(tokenDict):
+    #     token = WeChatMiniAppOAuth.get_api_token()
+    #     openid = tokenDict.get('openid',None)
+    #     session_key = tokenDict.get('session_key',None)
+    #     unionid = tokenDict.get('unionid',None)
+    #     headers = {'Authorization': f"Bearer {token}"}
+    #     response = requests.get(WeChatMiniAppOAuth._USER_INFO_URL, headers=headers)
+    #     response.raise_for_status()
+    #     return response.json()
     
     @staticmethod
     def _transform_user_info( raw_info: dict) -> OAuthUserInfo:
@@ -101,8 +109,8 @@ class WeChatAppOAuth(OAuth):
 # } 
 
     @staticmethod
-    def get_phon_no(phone_code:str,openid:str):
-        access_token = WeChatAppOAuth.get_api_token()
+    def get_phon_no(tenant_id:str,wechat_app_id:str,phone_code:str,openid:str):
+        access_token = WeChatMiniAppOAuth.get_api_token(tenant_id,wechat_app_id)
         params = {
             'access_token': access_token
             # 'openid': openid,
@@ -112,7 +120,7 @@ class WeChatAppOAuth(OAuth):
             'code': phone_code
         }
         # url = f"{WeChatAppOAuth._GET_PHONE_NO_URL}?access_token={access_token}"
-        response = requests.post(WeChatAppOAuth._GET_PHONE_NO_URL,json=data,params=params)
+        response = requests.post(WeChatMiniAppOAuth._GET_PHONE_NO_URL,json=data,params=params)
         response_json = response.json()
         if  response_json.get('errcode',1) != 0:
             raise ValueError(f"Error in WeChat OAuth: {response_json.get('errmsg')}")

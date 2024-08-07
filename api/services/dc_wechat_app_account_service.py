@@ -32,7 +32,7 @@ class WeChatAppAccountService:
     @staticmethod
     def get_app_list(tenant_id: str, account_id: str):
         query1=text("""
-        select apps.id,apps.name,apps.description,apps.mode,b.created_at,b.enabled from apps left join (select * from  account_app where account_app.account_id=:account_id) as b
+        select apps.id,apps.name,apps.description,apps.mode,b.created_at,b.enabled from apps left join (select * from  wechat_account_app where wechat_account_app.account_id=:account_id) as b
         on apps.id=b.id where apps.tenant_id = :tenant_id
         """)
         allApps = db.session.execute(query1,{'tenant_id':tenant_id,'account_id':account_id})

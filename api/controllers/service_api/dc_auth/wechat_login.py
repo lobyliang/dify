@@ -6,7 +6,7 @@ from models.account import Account, AccountStatus, Tenant
 from controllers.service_api import api
 from services.account_service import AccountService, TenantService
 from extensions.ext_database import db
-from libs.dc_wechat_oauth import WeChatAppOAuth
+from libs.dc_wechat_oauth import WeChatMiniAppOAuth
 
 
 def _get_account_by_openid_or_email(provider: str, open_id: str,email:str=None) -> Optional[Account]:
@@ -22,8 +22,8 @@ class WeChatAPPLoginApi(DatasetApiResource):
 
     # 登录
     def get(self,tenant_id:str,code:str):
-        
-        tokenDict = WeChatAppOAuth.get_access_token(code)
+        wechat_app_id = request.headers.get('wechat_app_id')
+        tokenDict = WeChatMiniAppOAuth.get_access_token(tenant_id,wechat_app_id,code)
         openid = tokenDict['openid']
 
         account = _get_account_by_openid_or_email(self._provider,openid)
@@ -54,9 +54,10 @@ class WeChatAPPRegisterApi(DatasetApiResource):
     _provider = 'wechat_app'
     # 这个方法是注册用户
     def get(self,tenant_id:str,code:str,phoneCode:str,):
-        tokenDict = WeChatAppOAuth.get_access_token(code)
+        wechat_app_id = request.headers.get('wechat_app_id')
+        tokenDict = WeChatMiniAppOAuth.get_access_token(tenant_id,wechat_app_id,code)
         openid = tokenDict['openid']
-        phonDict = WeChatAppOAuth.get_phon_no(phoneCode,openid)
+        phonDict = WeChatMiniAppOAuth.get_phon_no(tenant_id,wechat_app_id,phoneCode,openid)
         purePhoneNumber = phonDict['purePhoneNumber']
         account = _get_account_by_openid_or_email(self._provider,openid)
         if account:
@@ -67,8 +68,10 @@ class WeChatAPPRegisterApi(DatasetApiResource):
             if not account:
             # account = RegisterService.register(email, purePhoneNumber, open_id=purePhoneNumber, provider=self._provider)
                 account = AccountService.create_account(email,purePhoneNumber,interface_language='zh-CN',interface_theme='light',timezone='Asia/Shanghai')#
+                
             AccountService.link_account_integrate(self._provider, openid, account)
-            if not TenantService.is_tenant_creater(account.id,tenant_id):
+            msg,isCreater = TenantService.is_tenant_creater(account.id,tenant_id)
+            if not isCreater:
                 tenant = db.session.query(Tenant).filter(Tenant.id == tenant_id).one_or_404()
                 TenantService.create_tenant_member(tenant=tenant,account= account)
 

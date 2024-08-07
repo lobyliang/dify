@@ -3,7 +3,7 @@ import logging
 from flask_login import current_user
 from flask_restful import Resource, reqparse
 from werkzeug.exceptions import Forbidden
-
+from extensions.ext_database import db
 from controllers.console import api
 from controllers.console.setup import setup_required
 from controllers.console.wraps import account_initialization_required
@@ -11,7 +11,8 @@ from core.model_runtime.entities.model_entities import ModelType
 from core.model_runtime.errors.validate import CredentialsValidateFailedError
 from core.model_runtime.utils.encoders import jsonable_encoder
 from libs.login import login_required
-from models.account import TenantAccountRole
+from libs.rsa import generate_key_pair
+from models.account import Tenant, TenantAccountRole
 from services.model_load_balancing_service import ModelLoadBalancingService
 from services.model_provider_service import ModelProviderService
 

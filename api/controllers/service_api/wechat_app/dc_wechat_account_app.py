@@ -15,6 +15,7 @@ from services.file_info_service import FileInfoService
 
 
 class AddWeChatAppToAccountApi(DatasetApiResource):
+    ### 向用户授权Dify机器人权限
     @dream_validate_wechat_jwt_token
     def get(self, tenant_id: str, account: Account, account_id: str, app_id: str):
 

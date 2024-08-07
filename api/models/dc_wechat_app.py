@@ -6,7 +6,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from models import StringUUID
 
 class WeChatAccountApp(db.Model):
-    __tablename__ = "account_app"
+    __tablename__ = "wechat_account_app"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="account_app_pkey"),
         db.Index("account_app_accountid_idx", "account_id"),
@@ -36,4 +36,22 @@ class WeChatAccountApp(db.Model):
             "enabled": self.enabled,
 
         }
+    
+class WeChatTenantSecretInfo(db.Model):
+    __tablename__ = "wechat_tenant_secret_info"
+    __table_args__ = (
+        db.PrimaryKeyConstraint("id", name="wechat_tenant_secret_info_pkey"),
+        db.Index("wechat_tenant_secret_info_idx", "tenant_id"),
+    )
+    id = db.Column(UUID, server_default=db.text("uuid_generate_v4()"))
+    tenant_id = db.Column(UUID, nullable=False)
+    wechat_app_id = db.Column(db.String(255), nullable=False)
+    wechat_app_secret = db.Column(db.String(255), nullable=False)
+    app_type=db.Column(db.String(32), nullable=False,server_default='app')
+    created_at = db.Column(
+        db.DateTime, nullable=False, server_default=db.text("CURRENT_TIMESTAMP(0)")
+    )
+    created_by = db.Column(db.String(255), nullable=True, server_default=db.text("admin"))
+    enabled = db.Column(db.Boolean, nullable=False, server_default=db.text("true"))
+    
 
