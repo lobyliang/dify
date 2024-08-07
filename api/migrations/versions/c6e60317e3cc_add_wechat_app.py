@@ -57,7 +57,7 @@ def upgrade():
     sa.Column('wechat_app_secret', sa.String(length=255), nullable=False),
     sa.Column('app_type', sa.String(length=32), nullable=False, server_default='app'),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP(0)'), nullable=False),
-    sa.Column('created_by', sa.String(length=255), server_default=sa.text('admin'), nullable=True),
+    sa.Column('created_by', sa.String(length=255), server_default='admin', nullable=True),
     sa.Column('enabled', sa.Boolean(), server_default=sa.text('true'), nullable=False),
     sa.PrimaryKeyConstraint('id', name='wechat_tenant_secret_info_pkey')
     )

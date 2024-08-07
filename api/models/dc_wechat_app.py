@@ -51,7 +51,7 @@ class WeChatTenantSecretInfo(db.Model):
     created_at = db.Column(
         db.DateTime, nullable=False, server_default=db.text("CURRENT_TIMESTAMP(0)")
     )
-    created_by = db.Column(db.String(255), nullable=True, server_default=db.text("admin"))
+    created_by = db.Column(db.String(255), nullable=True, server_default='admin')
     enabled = db.Column(db.Boolean, nullable=False, server_default=db.text("true"))
     
 
