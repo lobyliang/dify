@@ -502,10 +502,17 @@ if you are not sure about the structure.
                 content = prompt_message.content
                 if not content:
                     content = ' '
-                tongyi_messages.append({
+                # tongyi_messages.append({
+                #     'role': 'assistant',
+                #     'content': content if not rich_content else [{"text": content}],
+                # })
+                message = {
                     'role': 'assistant',
-                    'content': content if not rich_content else [{"text": content}],
-                })
+                    'content': content if not rich_content else [{"text": content}]
+                }
+                if prompt_message.tool_calls:
+                    message['tool_calls'] = [tool_call.model_dump() for tool_call in prompt_message.tool_calls]
+                tongyi_messages.append(message)
             elif isinstance(prompt_message, ToolPromptMessage):
                 tongyi_messages.append({
                     "role": "tool",
