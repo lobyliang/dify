@@ -95,21 +95,30 @@ class BatchHitingTestService:
                     if is_like == 0:
                         if result_dict[seg_id]["like"] == 1:
                             query_item.like = query_item.like - 1
+                            result_dict[seg_id]["total_like"] -= 1
                         elif result_dict[seg_id]["like"] == -1:
                             query_item.dislike = query_item.dislike - 1
-                        result_dict.remove(seg_id)
+                            result_dict[seg_id]["total_dislike"] -= 1
+                        result_dict[seg_id]["like"] = 0
+                        # result_dict.pop(seg_id)
                     elif is_like == 1:
                         query_item.like = query_item.like + 1
-                        result_dict[seg_id]["like"] +=1
+                        result_dict[seg_id]["like"] =1
+                        result_dict[seg_id]["total_like"] += 1
                     elif is_like == -1:
                         query_item.dislike = query_item.dislike + 1
-                        result_dict[seg_id]["like"] -=1
+                        result_dict[seg_id]["like"] =-1
+                        result_dict[seg_id]["total_dislike"] += 1
                 else:
                     result_dict[seg_id]["like"] = is_like
+                    result_dict[seg_id]["total_dislike"] = 0
+                    result_dict[seg_id]["total_like"] = 0
                     if is_like == 1:
                         query_item.like = query_item.like + 1
+                        result_dict[seg_id]["total_like"] += 1
                     elif is_like == -1:
                         query_item.dislike = query_item.dislike + 1
+                        result_dict[seg_id]["total_dislike"] += 1
                 query_item.results = result_dict
                 db.session.bulk_update_mappings(
                     BatchDatasetHitingTest,

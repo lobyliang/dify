@@ -45,6 +45,8 @@ def dc_batch_hiting_test_task(param_id:str,dataset_id:str,account_id:str,limit:i
                     ret[segment.id]["hit_count"] = segment.hit_count
                     ret[segment.id]["position"] = segment.position
                     ret[segment.id]["like"] = 0
+                    ret[segment.id]["total_like"] = 0
+                    ret[segment.id]["total_dislike"] = 0
                 if test_item.results:
                     ext_results = test_item.results
                     test_item.last_results = ext_results
