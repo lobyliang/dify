@@ -10,7 +10,7 @@ import time
 from json import JSONDecodeError
 
 from flask import current_app
-from sqlalchemy import func, null
+from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import JSONB
 
 from extensions.ext_database import db

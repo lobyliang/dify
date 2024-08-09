@@ -11,7 +11,7 @@ from models.account import Account, AccountStatus
 from models.model import ApiToken
 from models.provider import TenantDefaultModel
 from controllers.service_api import api
-from services.account_service import RegisterService, TenantService
+from services.account_service import AccountService, RegisterService, TenantService
 from services.model_provider_service import ModelProviderService
 from .default_model_service import DefaultModelService
 from extensions.ext_database import db
@@ -313,19 +313,24 @@ class TenantManage(Resource):
                 password = "qwer1234"
                 if args["password"]:
                     password = args["password"]
-                account = RegisterService.register(
+                # account = RegisterService.register(
+                #     email=email,
+                #     name=args["user_name"],
+                #     password=password,
+                #     open_id=None,
+                #     provider=None,
+                # )
+                account = AccountService.create_account(
                     email=email,
                     name=args["user_name"],
+                    interface_language="zh-Hans",
                     password=password,
-                    open_id=None,
-                    provider=None,
                 )
-
-                account.interface_language = "chinese"
                 account.status = AccountStatus.ACTIVE.value
                 account.initialized_at = datetime.now(timezone.utc).replace(tzinfo=None)
+
                 db.session.commit()
-                TenantService.create_owner_tenant_if_not_exist(account,ext_tenant_name)
+                TenantService.create_owner_tenant_if_not_exist(account, ext_tenant_name)
                 tenants = TenantService.get_join_tenants(account)
                 tenant = tenants[0]
 

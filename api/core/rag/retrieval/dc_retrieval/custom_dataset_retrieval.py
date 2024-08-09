@@ -785,7 +785,7 @@ class CustomDataSetRetrieval:
                 if seg_ids[seg_id]["like"] == 1:
                     rag_query.like = rag_query.like - 1
                 elif seg_ids[seg_id]["like"] == -1:
-                    rag_query.like = rag_query.dislike - 1
+                    rag_query.dislike = rag_query.dislike - 1
                 seg_ids.pop(seg_id)
         else:
             if is_like == 1:

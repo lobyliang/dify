@@ -40,7 +40,7 @@ class WeChatMiniAppOAuth(OAuth):
         access_token = redis_client.get(f'wechat_app_token_{wechat_app_id}')
         if access_token:
             return access_token.decode()
-        wechat_app_secret = WechatTenantInfoService.get_wechat_tenant_info(tenant_id,wechat_app_id,"app")
+        wechat_app_secret = WechatTenantInfoService.get_wechat_tenant_info(tenant_id,wechat_app_id,WeChatAppType.WECHAT_MINI_APP)
         if wechat_app_secret is None:
             raise ValueError("微信小程序未注册")
         data = {

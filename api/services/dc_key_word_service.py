@@ -350,12 +350,13 @@ class KeyWordService:
                     apps = db.session.query(App).filter(App.id.in_(app_ids)).all()
                     return {
                         "apps": [app.to_dict() for app in apps],
-                        "msg": "dataset is exist",
+                        "msg": "dataset is used by apps",
                     }, 400
                 DatasetService.delete_dataset(dataset.id, account)
             dataset = DatasetService.create_empty_dataset(
                 tenant_id, name, "high_quality", account
             )
+            dataset.permission = 'all_team_members'
             dataset.description = description
             db.session.flush()
             rules = DatasetService.get_process_rules(dataset.id)
@@ -462,8 +463,8 @@ class KeyWordService:
                 )
 
                 leafs = KeyWordService.GetAllLeafs(tenant_id, root_id)
-                key_word_indexing_task.dely(
-                    tenant_id, dataset.id, documents[0].id, root_id, prefix, suffix,prompt
+                key_word_indexing_task.delay(
+                    tenant_id, dataset.id, documents[0].id, root_id, prefix, suffix,prompt,account.id
                 )
                 # for keyword in leafs:
                 #     arg={

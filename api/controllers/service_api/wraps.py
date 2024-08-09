@@ -38,7 +38,9 @@ def dream_validate_and_get_api_token(scope=None):
     """
     auth_header = request.headers.get('Dream-Ai')
     if auth_header is None or ' ' not in auth_header:
-        raise Unauthorized("Authorization header must be provided and start with 'Bearer'")
+        auth_header = request.headers.get('Authorization')
+        if auth_header is None or ' ' not in auth_header:
+            raise Unauthorized("Authorization header must be provided and start with 'Bearer'")
 
     auth_scheme, auth_token = auth_header.split(None, 1)
     auth_scheme = auth_scheme.lower()
@@ -137,6 +139,43 @@ def dream_validate_and_get_wechat_jwt_token():
         raise Unauthorized("Access token is invalid")
 
     return account
+
+
+def dream_validate_app_and_wechat_jwt_token(view: Optional[Callable] = None, *, fetch_user_arg: Optional[FetchUserArg] = None):
+    def decorator(view_func):
+        @wraps(view_func)
+        def decorated_view(*args, **kwargs):
+            api_token = dream_validate_and_get_api_token('app')
+            app_model = db.session.query(App).filter(App.id == api_token.app_id).first()
+            if not app_model:
+                raise Forbidden("The app no longer exists.")
+
+            if app_model.status != 'normal':
+                raise Forbidden("The app's status is abnormal.")
+
+            if not app_model.enable_api:
+                raise Forbidden("The app's API service has been disabled.")
+
+            tenant = db.session.query(Tenant).filter(Tenant.id == app_model.tenant_id).first()
+            if tenant.status == TenantStatus.ARCHIVE:
+                raise Forbidden("The workspace's status is archived.")
+
+            kwargs['app_model'] = app_model
+        
+            account = dream_validate_and_get_wechat_jwt_token()
+
+            if not account:
+                raise Forbidden("The JWT token is invalid.")
+
+            kwargs['account'] = account
+
+            return view_func(*args, **kwargs)
+        return decorated_view
+
+    if view is None:
+        return decorator
+    else:
+        return decorator(view)
 
 def dream_validate_wechat_jwt_token(view: Optional[Callable] = None, *, fetch_user_arg: Optional[FetchUserArg] = None):
     def decorator(view_func):

@@ -134,3 +134,37 @@ class DocKeyWordsClosure(db.Model):
     descendant_id = db.Column(StringUUID, nullable=False, primary_key=True)
     depth = db.Column(db.Integer, nullable=False)
     tenant_id = db.Column(StringUUID, nullable=False)
+
+class BatchDatasetHitingTestParams(db.Model):
+    __tablename__ = 'dataset_batch_hiting_test_params'
+    __table_args__ = (
+        db.PrimaryKeyConstraint('id', name='dataset_batch_hiting_test_params_pkey'),
+        db.Index('dataset_batch_hiting_test_params_id_idx', 'dataset_id'),
+    )
+    id = db.Column(StringUUID, primary_key=True, nullable=False, server_default=db.text('uuid_generate_v4()'))
+    dataset_id = db.Column(StringUUID, nullable=False)
+    params = db.Column(db.JSON, nullable=False)
+    created_by = db.Column(StringUUID, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.current_timestamp())
+    
+
+class BatchDatasetHitingTest(db.Model):
+    __tablename__ = 'dataset_batch_hiting_test'
+    __table_args__ = (
+        db.PrimaryKeyConstraint('id', name='dataset_batch_hiting_test_pkey'),
+        db.Index('dataset_batch_hiting_test_id_idx', 'dataset_id'),
+    )
+
+    id = db.Column(StringUUID, primary_key=True, nullable=False, server_default=db.text('uuid_generate_v4()'))
+    dataset_id = db.Column(StringUUID, nullable=False)
+    question = db.Column(db.String(255), nullable=False)
+    ####loby####
+    param_id = db.Column(StringUUID, nullable=True)
+    like = db.Column(db.Integer, nullable=True, default=0)
+    dislike = db.Column(db.Integer, nullable=True, default=0)
+    results=db.Column(db.JSON,nullable=True,comment='seg_id,和匹配精度')
+    last_results=db.Column(db.JSON,nullable=True,comment='seg_id,和匹配精度')
+    ############
+    created_by = db.Column(StringUUID, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.current_timestamp())
+    updated_at = db.Column(db.DateTime, nullable=True, server_default=db.func.current_timestamp())

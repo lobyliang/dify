@@ -9,7 +9,24 @@ from core.model_runtime.entities.message_entities import SystemPromptMessage, Us
 from core.model_runtime.entities.model_entities import ModelType
 from extensions.ext_database import db
 from models.dataset import Dataset, Document
-from services.dataset_service import SegmentService
+
+
+import datetime
+import logging
+import time
+import uuid
+
+from flask_login import current_user
+from sqlalchemy import func
+
+from extensions.ext_redis import redis_client
+from libs import helper
+from models.dataset import (
+    Dataset,
+    Document,
+    DocumentSegment,
+)
+from services.vector_service import VectorService
 
 # 构建知识库提示词
 # # 角色
@@ -58,10 +75,65 @@ def generate_key_word_content(tenant_id:str,key_word:str,category:str,prompt:str
     except Exception as e:
         logging.error(e)
     return None
-    
+
+def create_segment(args: dict,tenant_id:str, document: Document, dataset: Dataset,account_id:str):
+        content = args['content']
+        doc_id = str(uuid.uuid4())
+        segment_hash = helper.generate_text_hash(content)
+        tokens = 0
+        if dataset.indexing_technique == 'high_quality':
+            model_manager = ModelManager()
+            embedding_model = model_manager.get_model_instance(
+                tenant_id=tenant_id,
+                provider=dataset.embedding_model_provider,
+                model_type=ModelType.TEXT_EMBEDDING,
+                model=dataset.embedding_model
+            )
+            # calc embedding use tokens
+            tokens = embedding_model.get_text_embedding_num_tokens(
+                texts=[content]
+            )
+        lock_name = 'add_segment_lock_document_id_{}'.format(document.id)
+        with redis_client.lock(lock_name, timeout=600):
+            max_position = db.session.query(func.max(DocumentSegment.position)).filter(
+                DocumentSegment.document_id == document.id
+            ).scalar()
+            segment_document = DocumentSegment(
+                tenant_id=tenant_id,
+                dataset_id=document.dataset_id,
+                document_id=document.id,
+                index_node_id=doc_id,
+                index_node_hash=segment_hash,
+                position=max_position + 1 if max_position else 1,
+                content=content,
+                word_count=len(content),
+                tokens=tokens,
+                status='completed',
+                indexing_at=datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None),
+                completed_at=datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None),
+                created_by=account_id
+            )
+            if document.doc_form == 'qa_model':
+                segment_document.answer = args['answer']
+
+            db.session.add(segment_document)
+            db.session.commit()
+
+            # save vector index
+            try:
+                VectorService.create_segments_vector([args['keywords']], [segment_document], dataset)
+            except Exception as e:
+                logging.exception("create segment index failed")
+                segment_document.enabled = False
+                segment_document.disabled_at = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+                segment_document.status = 'error'
+                segment_document.error = str(e)
+                db.session.commit()
+            segment = db.session.query(DocumentSegment).filter(DocumentSegment.id == segment_document.id).first()
+            return segment
 
 @shared_task(queue='dataset')
-def key_word_indexing_task(tenant_id: str,dataset_id:str,document_id:str,root_id: str,prefix:str,suffix:str,prompt:str):
+def key_word_indexing_task(tenant_id: str,dataset_id:str,document_id:str,root_id: str,prefix:str,suffix:str,prompt:str,account_id:str):
     """
     Async process document
     :param dataset_id:
@@ -104,7 +176,7 @@ def key_word_indexing_task(tenant_id: str,dataset_id:str,document_id:str,root_id
                 keyword.key_word,keyword.category
             ]
             }
-            SegmentService.create_segment(arg,document,dataset)
+            create_segment(arg,tenant_id,document,dataset,account_id)
         logging.info(click.style(f"{len(leafs)} keywords indexed", fg='green'))
     except Exception as e:
         logging.info(click.style(str(e), fg='yellow'))

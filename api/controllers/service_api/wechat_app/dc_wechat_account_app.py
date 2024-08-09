@@ -47,7 +47,7 @@ class GetConversationChunkAttachFileApi(DatasetApiResource):
         try:
             account = AccountService.load_user(account.get("user_id", None))
             if not account:
-                return {"message": "account not found"}, 404
+                return {"message": "account not found"}, 401
             # conv = ConversationService.get_conversation(app_model=app_model,conversation_id=c_id,user=account)
             last_message = (
                 db.session.query(Message)

@@ -11,5 +11,5 @@ from .app import app, audio, completion, conversation, file, message, workflow
 from .dataset import dataset, document, segment
 from .dc_auth import tenant,wechat_login
 from .dc_dataset import chunckattach,ds_create,ds_query,hit_testing,ds_app
-from .robot import app_questions,key_word_march,jinja2_transformer,chat_robot
+from .robot import app_questions,key_word_march,jinja2_transformer,chat_robot,dc_audio
 from .wechat_app import dc_wechat_account_app
