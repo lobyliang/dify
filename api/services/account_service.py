@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 from typing import Any, Optional
-
+from sqlalchemy.dialects.postgresql import JSONB
 from flask import current_app
 from sqlalchemy import func, text
 from werkzeug.exceptions import Unauthorized
@@ -203,10 +203,18 @@ class AccountService:
         db.session.commit()
         logging.info(f'Account {account.id} logged in successfully.')
 
+    #lobyliang
+    @staticmethod
+    def load_by_email(email:str)->Account:
+        return db.session.query(Account).filter(Account.email==email).one_or_none()
+
 
 class TenantService:
 
     ###loby####
+    @staticmethod
+    def get_tenant_by_ext_tenant_id(ext_tenant_id:str)->Tenant:
+        return db.session.query(Tenant).filter(db.func.jsonb_extract_path_text(db.cast(Tenant.custom_config,JSONB),'extent_tenant_id')==ext_tenant_id).one_or_none()
     @staticmethod
     def get_extent_tenant_count(ext_tenant_id:str)->int:
         query=text("""

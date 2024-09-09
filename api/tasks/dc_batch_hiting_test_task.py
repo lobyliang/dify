@@ -21,6 +21,7 @@ def dc_batch_hiting_test_task(param_id:str,dataset_id:str,account_id:str,limit:i
     start_at = time.perf_counter()
 
     indexing_cache_key = 'batch_hiting_test_{}'.format(param_id)
+    redis_client.set('batch_hiting_test_{}'.format(dataset_id), param_id)
     try:
         account = AccountService.load_user(account_id)
         if not account:
@@ -54,11 +55,16 @@ def dc_batch_hiting_test_task(param_id:str,dataset_id:str,account_id:str,limit:i
                 test_item.param_id = param_id
                 test_item.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
         db.session.commit()
+        time.sleep(100.0)
+        redis_client.delete('batch_hiting_test_{}'.format(dataset_id))
         redis_client.setex(indexing_cache_key, 600, 'completed')
         end_at = time.perf_counter()
         logging.info(click.style('测试知识库任务: {} latency: {}'.format(param_id, end_at - start_at), fg='green'))
     except Exception as e:
         logging.exception(f"测试知识库任务 failed:{e}")
+    finally:
+        redis_client.delete('batch_hiting_test_{}'.format(dataset_id))
+
     # finally:
     #     redis_client.delete(indexing_cache_key)
     

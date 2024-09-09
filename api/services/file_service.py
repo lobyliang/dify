@@ -30,6 +30,74 @@ PREVIEW_WORDS_LIMIT = 3000
 class FileService:
 
     @staticmethod
+    def unique_upload_file(file: FileStorage, user: Union[Account, EndUser], only_image: bool = False) -> UploadFile:
+        extension = file.filename.split('.')[-1]
+        etl_type = current_app.config['ETL_TYPE']
+        allowed_extensions = UNSTRUSTURED_ALLOWED_EXTENSIONS + IMAGE_EXTENSIONS if etl_type == 'Unstructured' \
+            else ALLOWED_EXTENSIONS + IMAGE_EXTENSIONS
+        if extension.lower() not in allowed_extensions:
+            raise UnsupportedFileTypeError()
+        elif only_image and extension.lower() not in IMAGE_EXTENSIONS:
+            raise UnsupportedFileTypeError()
+        
+        if isinstance(user, Account):
+            current_tenant_id = user.current_tenant_id
+        else:
+            # end_user
+            current_tenant_id = user.tenant_id
+
+        # read file content
+        file_content = file.read()
+
+        # get file size
+        file_size = len(file_content)
+
+        hash_code = hashlib.sha3_256(file_content).hexdigest()
+        old_file =  db.session.query(UploadFile).filter(hash=hash_code,tenant_id=current_tenant_id).first()
+        if old_file:
+            return old_file
+
+        if extension.lower() in IMAGE_EXTENSIONS:
+            file_size_limit = current_app.config.get("UPLOAD_IMAGE_FILE_SIZE_LIMIT") * 1024 * 1024
+        else:
+            file_size_limit = current_app.config.get("UPLOAD_FILE_SIZE_LIMIT") * 1024 * 1024
+
+        if file_size > file_size_limit:
+            message = f'File size exceeded. {file_size} > {file_size_limit}'
+            raise FileTooLargeError(message)
+
+        # user uuid as file name
+        file_uuid = str(uuid.uuid4())
+
+
+        file_key = 'upload_files/' + current_tenant_id + '/' + file_uuid + '.' + extension
+
+        # save file to storage
+        storage.save(file_key, file_content)
+
+        # save file to db
+        config = current_app.config
+        upload_file = UploadFile(
+            tenant_id=current_tenant_id,
+            storage_type=config['STORAGE_TYPE'],
+            key=file_key,
+            name=file.filename,
+            size=file_size,
+            extension=extension,
+            mime_type=file.mimetype,
+            created_by_role=('account' if isinstance(user, Account) else 'end_user'),
+            created_by=user.id,
+            created_at=datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None),
+            used=False,
+            hash=hash_code
+        )
+
+        db.session.add(upload_file)
+        db.session.commit()
+
+        return upload_file
+
+    @staticmethod
     def upload_file(file: FileStorage, user: Union[Account, EndUser], only_image: bool = False) -> UploadFile:
         extension = file.filename.split('.')[-1]
         etl_type = current_app.config['ETL_TYPE']

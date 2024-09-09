@@ -117,7 +117,7 @@ def dream_validate_and_get_wechat_jwt_token():
     """
     auth_header = request.headers.get('wechat-token')
     if auth_header is None or ' ' not in auth_header:
-        raise Unauthorized("Authorization header must be provided and start with 'Bearer'")
+        raise Unauthorized("Authorization header must be provided and start with 'wechat-token'")
 
     auth_scheme, auth_token = auth_header.split(None, 1)
     auth_scheme = auth_scheme.lower()

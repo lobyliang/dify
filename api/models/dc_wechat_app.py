@@ -55,3 +55,24 @@ class WeChatTenantSecretInfo(db.Model):
     enabled = db.Column(db.Boolean, nullable=False, server_default=db.text("true"))
     
 
+class WeChatAgentVisible(db.Model):
+    __tablename__ = "wechat_agent_visible"
+    __table_args__ = (
+        db.PrimaryKeyConstraint("id", name="wechat_agent_visible_pkey"),
+        db.Index("wechat_agent_visible_tenant_idx", "tenant_id"),
+    )
+    id = db.Column(UUID, server_default=db.text("uuid_generate_v4()"))
+    tenant_id = db.Column(UUID, nullable=False)
+    wechat_app_id = db.Column(db.String(255), nullable=False)
+    app_id = db.Column(UUID, nullable=False)
+    app_type=db.Column(db.String(32), nullable=False,server_default='app')
+    created_at = db.Column(
+        db.DateTime, nullable=False, server_default=db.text("CURRENT_TIMESTAMP(0)")
+    )
+    created_by = db.Column(db.String(255), nullable=True)
+    updated_at = db.Column(
+        db.DateTime, nullable=True, server_default=db.text("CURRENT_TIMESTAMP(0)")
+    )
+    updated_by = db.Column(db.String(255), nullable=True)
+    visible = db.Column(db.Boolean, nullable=False, server_default=db.text("true"))
+    

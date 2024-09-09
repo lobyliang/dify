@@ -3,7 +3,7 @@ import json
 from flask import request
 from flask_login import current_user
 from flask_restful import Resource,reqparse
-from services.question_service import QuestionService
+from services.dc_question_service import QuestionService
 from controllers.console import api
 from controllers.console.app.wraps import get_app_model
 from controllers.console.setup import setup_required

@@ -1,14 +1,19 @@
 import logging
-from flask_restful import reqparse
-from controllers.service_api import api
-from controllers.service_api.wraps import DatasetApiResource
+from flask_login import current_user
+from flask_restful import Resource, reqparse
+from controllers.console.setup import setup_required
+from controllers.kaas_api import api
+from libs.login import kaas_login_required
 from services.dc_question_service import QuestionService
 from flask_restful import marshal, fields
 
 
-class CreateAppQuestionApi(DatasetApiResource):
+class CreateAppQuestionApi(Resource):
 
-    def post(self, tenant_id, app_id):
+    @setup_required
+    @kaas_login_required
+    def post(self, app_id):
+        tenant_id = str(current_user.current_tenant_id)
         argparser = reqparse.RequestParser()
         argparser.add_argument("questions", type=list, required=True, location="json")
         # argparser.add_argument('tenant_id', type=str, required=True,location='json')
@@ -43,10 +48,12 @@ AppQuestionField = {
 # MachedKeyWordsFields={
 #     fields.List(fields.Nested(MachedKeyWordsField), attribute="items")
 # }
-class GetAppQuestionApi(DatasetApiResource):
-
-    def delete(self, tenant_id):
+class GetAppQuestionApi(Resource):
+    @setup_required
+    @kaas_login_required
+    def delete(self):
         try:
+            tenant_id = str(current_user.current_tenant_id)
             argparser = reqparse.RequestParser()
             argparser.add_argument("doc_ids", type=list, required=True, location="json")
             argparser.add_argument("app_id", type=str, required=False, location="json")
@@ -58,8 +65,10 @@ class GetAppQuestionApi(DatasetApiResource):
         except Exception as e:
             logging.error(f"删除APP问题失败！for{e}")
             return {}, 500
-
-    def post(self, tenant_id: str):
+    @setup_required
+    @kaas_login_required
+    def post(self):
+        tenant_id = str(current_user.current_tenant_id)
         argparser = reqparse.RequestParser()
         argparser.add_argument(
             "app_id", type=str, default=None, required=False, location="json"
@@ -104,9 +113,12 @@ class GetAppQuestionApi(DatasetApiResource):
             return [], 500
 
 
-class MarchAppQuestionApi(DatasetApiResource):
+class MarchAppQuestionApi(Resource):
     # tenant_id:str,query:str,top_k:int=20,score_threshold:float=0.3
-    def post(self, tenant_id: str):
+    @setup_required
+    @kaas_login_required    
+    def post(self):
+        tenant_id = str(current_user.current_tenant_id)
         argparser = reqparse.RequestParser()
         argparser.add_argument("query", type=str, required=True)
         argparser.add_argument("top_k", type=int, required=False, default=20)

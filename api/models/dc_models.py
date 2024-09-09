@@ -168,3 +168,39 @@ class BatchDatasetHitingTest(db.Model):
     created_by = db.Column(StringUUID, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, nullable=True, server_default=db.func.current_timestamp())
+
+
+class DictCategory(db.Model):
+    __tablename__ = "dict_categories"
+    __table_args__ = (
+        db.PrimaryKeyConstraint("id", name="pk_dict_category_id"),
+        db.Index("idx_dict_categories", "key", "tenant_id", unique=True),
+    )
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(StringUUID, nullable=True)
+    name = db.Column(db.String(255), nullable=False)
+    key = db.Column(db.String(64), nullable=True)
+
+
+class DictCategoryClosure(db.Model):
+    __tablename__ = "dict_category_closure"
+    parent_id = db.Column(db.Integer, db.ForeignKey("dict_categories.id"), primary_key=True)
+    child_id = db.Column(db.Integer, db.ForeignKey("dict_categories.id"), primary_key=True)
+
+
+class DictBinding(db.Model):
+    __tablename__ = "dict_bindings"
+    __table_args__ = (
+        db.PrimaryKeyConstraint("id", name="pk_dict_binding_id"),
+        db.Index("tag_bind_target_id_idx", "target_id"),
+        db.Index("tag_bind_tag_id_idx", "category_id"),
+    )
+
+    id = db.Column(db.BigInteger, primary_key=True)
+    category_id = db.Column(db.Integer, nullable=False)
+    target_id = db.Column(db.String(128), nullable=False)
+    target_type = db.Column(db.String(64), nullable=False)
+    created_at = db.Column(
+        db.DateTime, nullable=False, server_default=db.text("CURRENT_TIMESTAMP(0)")
+    )
+    created_by = db.Column(StringUUID, nullable=False)

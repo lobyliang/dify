@@ -127,6 +127,7 @@ class TenantManage(Resource):
                 current_app.config["DEFAULT_LLM_MODEL_PROVIDER"]
                 in TenantManage.providers_with_key
             ):
+
                 TenantManage.providers.append(
                     {
                         "provider": current_app.config["DEFAULT_LLM_MODEL_PROVIDER"],
@@ -161,20 +162,20 @@ class TenantManage(Resource):
             TenantManage.embeddings_config["load_balancing"]["enabled"] = False
             TenantManage.embeddings_config["load_balancing"]["configs"] = []
             if (
-                current_app.config["DEFAULT_LLM_MODEL_PROVIDER"]
+                current_app.config["DEFAULT_EMBEDDING_MODEL_PROVIDER"]
                 in TenantManage.providers_with_key
-                and current_app.config["DEFAULT_LLM_MODEL_PROVIDER"]
+                and current_app.config["DEFAULT_EMBEDDING_MODEL_PROVIDER"]
                 not in all_providers
             ):
                 TenantManage.providers.append(
                     {
-                        "provider": current_app.config["DEFAULT_LLM_MODEL_PROVIDER"],
+                        "provider": current_app.config["DEFAULT_EMBEDDING_MODEL_PROVIDER"],
                         "credentials": json.loads(
-                            current_app.config["DEFAULT_LLM_MODEL_CREDENTIALS"]
+                            current_app.config["DEFAULT_EMBEDDING_MODEL_CREDENTIALS"]
                         ),
                     }
                 )
-                all_providers.append(current_app.config["DEFAULT_LLM_MODEL_PROVIDER"])
+                all_providers.append(current_app.config["DEFAULT_EMBEDDING_MODEL_PROVIDER"])
 
             TenantManage.reranking_config = {}
             TenantManage.reranking_config["model"] = current_app.config[
@@ -201,20 +202,20 @@ class TenantManage(Resource):
             TenantManage.reranking_config["load_balancing"]["configs"] = []
             TenantManage._initialized = True
             if (
-                current_app.config["DEFAULT_LLM_MODEL_PROVIDER"]
+                current_app.config["DEFAULT_RERANKING_MODEL_PROVIDER"]
                 in TenantManage.providers_with_key
-                and current_app.config["DEFAULT_LLM_MODEL_PROVIDER"]
+                and current_app.config["DEFAULT_RERANKING_MODEL_PROVIDER"]
                 not in all_providers
             ):
                 TenantManage.providers.append(
                     {
-                        "provider": current_app.config["DEFAULT_LLM_MODEL_PROVIDER"],
+                        "provider": current_app.config["DEFAULT_RERANKING_MODEL_PROVIDER"],
                         "credentials": json.loads(
-                            current_app.config["DEFAULT_LLM_MODEL_CREDENTIALS"]
+                            current_app.config["DEFAULT_RERANKING_MODEL_CREDENTIALS"]
                         ),
                     }
                 )
-                all_providers.append(current_app.config["DEFAULT_LLM_MODEL_PROVIDER"])
+                all_providers.append(current_app.config["DEFAULT_RERANKING_MODEL_PROVIDER"])
             logging.info("默认模型初始化完成")
 
         for provider_config in TenantManage.providers:
@@ -283,6 +284,10 @@ class TenantManage(Resource):
                 return {
                     "message": f"token or extent_tenant_id and extent_user_id must be set"
                 }, 400
+            
+            hasTenant = TenantService.get_extent_tenant_count(ext_tenant_id)
+            if hasTenant > 0:
+                return f"Tenant {email} aready exits", 400
         except Exception as e:
             return {"message": f"Unauthorized:{e}"}, 400
 
@@ -296,14 +301,9 @@ class TenantManage(Resource):
             )
 
         try:
-            old_account = (
-                db.session.query(Account).filter(Account.email == email).first()
-            )
+            old_account = AccountService.load_by_email(email)
             if old_account:
                 # return f"Account {email} aready exits", 400
-                hasTenant = TenantService.get_extent_tenant_count(ext_tenant_id)
-                if hasTenant > 0:
-                    return f"Tenant {email} aready exits", 400
                 if not ext_tenant_name:
                     ext_tenant_name = f"{old_account.name}_{ext_tenant_id}'s Workspace"
                 tenant = TenantService.create_tenant(ext_tenant_name)

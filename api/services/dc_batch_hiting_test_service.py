@@ -1,9 +1,11 @@
 
+from copy import deepcopy
 from flask import json
 from flask_restful import marshal
 
 from extensions.ext_database import db
 from fields import segment_fields
+from extensions.ext_redis import redis_client
 from models.dataset import (
     DocumentSegment,
 )
@@ -13,6 +15,31 @@ from services.errors.account import NoPermissionError
 from tasks.dc_batch_hiting_test_task import dc_batch_hiting_test_task
 
 class BatchHitingTestService:
+    @staticmethod
+    def get_segment_results(dataset_id:str,query_id:str):
+        result = db.session.query(BatchDatasetHitingTest).filter(BatchDatasetHitingTest.dataset_id == dataset_id,BatchDatasetHitingTest.id == query_id).one_or_none()
+        if not result:
+            return {}
+        result = deepcopy(result.results)
+        seg_ids = [x for x in result]
+        query = db.session.query(DocumentSegment).filter(DocumentSegment.dataset_id == dataset_id,DocumentSegment.id.in_(seg_ids))
+        segments = query.order_by(DocumentSegment.position).all()
+        ret = []
+        for seg in segments:
+            if seg.id in result:
+                result[seg.id]["id"] = seg.id
+                result[seg.id]["content"] = seg.content
+                result[seg.id]["answer"] = seg.answer
+                result[seg.id]["word_count"] = seg.word_count
+                result[seg.id]["tokens"] = seg.tokens
+                result[seg.id]["keyword"] = seg.keywords
+                result[seg.id]["created_at"] = seg.created_at.strftime("%Y-%m-%d %H:%M:%S")
+                user = AccountService.load_user(seg.created_by)
+                if user:
+                    result[seg.id]["created_by_name"] = user.name
+                ret.append(result[seg.id])
+        return ret
+    
     @staticmethod
     def add_test_questions(dataset_id: str, questions: list,param_id:str, user_id: str):
         account = AccountService.load_user(user_id)
@@ -82,8 +109,25 @@ class BatchHitingTestService:
         return {'data':marshal(segments, segment_fields)}
 
     @staticmethod
+    def has_test_task(dataset_id:str):
+        is_test = redis_client.exists('batch_hiting_test_{}'.format(dataset_id))
+        if is_test:
+            old_param_id= redis_client.get('batch_hiting_test_{}'.format(dataset_id))
+            if old_param_id:
+                old_param_id = old_param_id.decode()
+            return {'busy':True,'param_id':old_param_id}
+        return {'busy':False}
+    
+    @staticmethod
     def start_hiting_test(dataset_id: str,param_id:str,account_id:str,limit:int):
+        is_test = redis_client.exists('batch_hiting_test_{}'.format(dataset_id))
+        if is_test:
+            old_param_id= redis_client.get('batch_hiting_test_{}'.format(dataset_id))
+            if old_param_id:
+                old_param_id = old_param_id.decode()
+            return {'data':'任务正在执行中','param_id':old_param_id},202
         dc_batch_hiting_test_task.delay(param_id,dataset_id,account_id,limit)
+        return {'data':'任务已提交'},200
 
     @staticmethod
     def comment_result(dataset_id,query_id,is_like:int,seg_id):

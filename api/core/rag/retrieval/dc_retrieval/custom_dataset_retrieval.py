@@ -368,7 +368,6 @@ class CustomDataSetRetrieval:
             if (
                 dataset
                 and dataset.available_document_count == 0
-                and dataset.available_document_count == 0
             ):
                 continue
 

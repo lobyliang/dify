@@ -197,11 +197,12 @@ class FileInfoService:
         return generator, upload_file.mime_type
 
     @staticmethod
-    def delete_attach_file_by_id(file_id: str):
+    def delete_attach_file_by_id(doc_seg_id:str,file_id: str):
         try:
             doc_seg_attch = (
                 db.session.query(DocumentSegmentsAttach)
-                .filter(DocumentSegmentsAttach.file == file_id)
+                .filter(DocumentSegmentsAttach.file == file_id,
+                        DocumentSegmentsAttach.doc_seg_id == doc_seg_id)
                 .one_or_none()
             )
             if doc_seg_attch:
@@ -214,7 +215,14 @@ class FileInfoService:
             if uploadFile:
                 db.session.delete(uploadFile)
             if doc_seg_attch.source == "file":
-                storage.delete(doc_seg_attch.file)
+                doc_seg_attch2 = (
+                db.session.query(DocumentSegmentsAttach)
+                .filter(DocumentSegmentsAttach.file == file_id,
+                        DocumentSegmentsAttach.doc_seg_id == doc_seg_id)
+                .one_or_none()
+            )
+                if not doc_seg_attch2:
+                    storage.delete(doc_seg_attch.file)
             # db.session.delete(doc_seg_attch)
             db.session.commit()
         except Exception as e:

@@ -463,3 +463,5 @@ class Config:
 
         self.WECHAT_OPEN_ID=get_env('WECHAT_OPEN_ID')
         self.WECHAT_OPEN_SECRET=get_env('WECHAT_OPEN_SECRET')
+        # i云小梦权限接口地址
+        self.DREAM_AI_SERVICE_URL = get_env('DREAM_AI_SERVICE_URL')

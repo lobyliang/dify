@@ -148,6 +148,24 @@ def load_user_from_request(request_from_flask_login):
         user_id = decoded.get('user_id')
 
         return AccountService.load_user(user_id)
+    elif request.blueprint in ['kaas_api']:
+        auth_header = request.headers.get('kaastoken', '')
+        if not auth_header:
+            auth_token = request.args.get('_token')
+            if not auth_token:
+                raise Unauthorized('Invalid Authorization token.')
+        else:
+            if ' ' not in auth_header:
+                raise Unauthorized('Invalid Authorization header format. Expected \'Bearer <api-key>\' format.')
+            auth_scheme, auth_token = auth_header.split(None, 1)
+            auth_scheme = auth_scheme.lower()
+            if auth_scheme != 'bearer':
+                raise Unauthorized('Invalid Authorization header format. Expected \'Bearer <api-key>\' format.')
+
+        decoded = PassportService().verify(auth_token)
+        user_id = decoded.get('user_id')
+
+        return AccountService.load_user(user_id)
     else:
         return None
 
@@ -168,12 +186,19 @@ def register_blueprints(app):
     from controllers.inner_api import bp as inner_api_bp
     from controllers.service_api import bp as service_api_bp
     from controllers.web import bp as web_bp
+    from controllers.kaas_api import bp as kaas_api_bp
 
     CORS(service_api_bp,
          allow_headers=['Content-Type', 'Authorization', 'X-App-Code'],
          methods=['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS', 'PATCH']
          )
     app.register_blueprint(service_api_bp)
+
+    CORS(kaas_api_bp,
+         allow_headers=['Content-Type','KaasToken','Authorization', 'X-App-Code'],
+         methods=['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS', 'PATCH']
+         )
+    app.register_blueprint(kaas_api_bp)
 
     CORS(web_bp,
          resources={

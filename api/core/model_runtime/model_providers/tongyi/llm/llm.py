@@ -269,7 +269,7 @@ if you are not sure about the structure.
         :return: llm response
         """
         # transform assistant 要改，没有choices message to prompt message
-        if not response.output.choices:
+        if not response.output or not response.output.choices:
             assistant_prompt_message = AssistantPromptMessage(
             content="服务器忙，请稍后重试！",)
         else:

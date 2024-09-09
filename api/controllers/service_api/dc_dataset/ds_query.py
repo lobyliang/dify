@@ -1,4 +1,3 @@
-from email.policy import default
 import logging
 from flask_restful import fields
 
@@ -36,6 +35,7 @@ class RAGQueryApi(DatasetApiResource):
         self,
         tenant_id,
     ):
+
         parser = reqparse.RequestParser()
         parser.add_argument(
             "user_id", type=str, required=True, nullable=False, location="json"
@@ -93,7 +93,12 @@ class RAGQueryApi(DatasetApiResource):
             "show_source", type=bool, required=True, nullable=False, location="json"
         )
         parser.add_argument(
-            "attach_detail", type=bool, required=False, nullable=True,default=False, location="json"
+            "attach_detail",
+            type=bool,
+            required=False,
+            nullable=True,
+            default=False,
+            location="json",
         )
         args = parser.parse_args()
         user_id = args["user_id"]

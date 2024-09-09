@@ -130,11 +130,11 @@ class GetKeyWordsApi(DatasetApiResource):
                 top_n,
                 isDebug,
             )
-            ret2 = sorted(
+            ret2 = dict(sorted(
                 ret2.items(),
                 key=lambda x: (x[1]["total_score"], x[1]["max_score"]),
                 reverse=True,
-            )
+            ))
             return ret2
         except Exception as e:
             logging.error(e)

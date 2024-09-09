@@ -35,7 +35,7 @@ from services.app_generate_service import AppGenerateService
 import services.errors
 import services.errors.app_model_config
 import services.errors.conversation
-from services.question_service import QuestionService
+from services.dc_question_service import QuestionService
 
 # from services.chat_robot_service import ChatRebotService
 

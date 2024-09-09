@@ -132,11 +132,15 @@ class RAGBatchHitTestingParamApi(DatasetApiResource):
             param_response,_ = BatchHitingTestService.update_hiting_test_params(dataset_id=dataset_id,params=args["retrieval_model"],user_id=user_id)
             add_count = BatchHitingTestService.add_test_questions(dataset_id=dataset_id,questions=args["questions"],param_id=param_response['id'],user_id=user_id)
             if args["start"]:
-                BatchHitingTestService.start_hiting_test(dataset_id=dataset_id,param_id=param_response['id'],account_id=user_id, limit=args["limit"])
+                msg,code= BatchHitingTestService.start_hiting_test(dataset_id=dataset_id,param_id=param_response['id'],account_id=user_id, limit=args["limit"])
+            else:
+                msg = 'Add Questions'
+                code = 200
             return {
+                "msg":msg,
                 "add_count":add_count,
                 "param_id":param_response['id']
-            },200
+            },code
         except Exception as e:
             logging.exception("Hit testing failed.",e)
             raise InternalServerError(str(e))
@@ -185,10 +189,27 @@ class RAGBatchHitTestingResultCommentApi(DatasetApiResource):
             logging.exception("Hit testing failed.",e)
             raise InternalServerError(str(e))
     
+class RAGBatchHitTestingBusyApi(DatasetApiResource):
+    def get(self, tenant_id, dataset_id):
+        dataset_id = str(dataset_id)
+        try:
+            return BatchHitingTestService.has_test_task(dataset_id=dataset_id),200
+        except Exception as e:
+            logging.exception("Hit testing failed.",e)
+            raise InternalServerError(str(e))
 
-
+class RAGBatchHitTestingSegmentResultApi(DatasetApiResource):
+    def get(self, tenant_id, dataset_id:uuid,query_id:str):
+        dataset_id = str(dataset_id)
+        try:
+            return BatchHitingTestService.get_segment_results(dataset_id=dataset_id,query_id=query_id),200
+        except Exception as e:
+            logging.exception("Hit testing failed.",e)
+            raise InternalServerError(str(e))
 
 api.add_resource(RAGHitTestingApi, "/rag/datasets/<uuid:dataset_id>/hit-testing")
 api.add_resource(RAGBatchHitTestingParamApi, "/rag/datasets/<uuid:dataset_id>/batch-hit-testing")
 api.add_resource(RAGBatchHitTestingResultApi, "/rag/datasets/<uuid:dataset_id>/batch-hit-testing")
 api.add_resource(RAGBatchHitTestingResultCommentApi, "/rag/datasets/<uuid:dataset_id>/batch-hit-testing/<uuid:query_id>/<uuid:seg_id>/<string:like>")
+api.add_resource(RAGBatchHitTestingBusyApi, "/rag/datasets/<uuid:dataset_id>/batch-hit-testing/busy")
+api.add_resource(RAGBatchHitTestingSegmentResultApi, "/rag/datasets/<uuid:dataset_id>/batch-hit-testing/result/<string:query_id>")

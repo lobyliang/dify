@@ -94,6 +94,47 @@ def upgrade():
     with op.batch_alter_table('dataset_batch_hiting_test_params', schema=None) as batch_op:
         batch_op.create_index('dataset_batch_hiting_test_params_id_idx', ['dataset_id'], unique=False)
 
+
+    op.create_table('wechat_agent_visible',
+    sa.Column('id', sa.UUID(), server_default=sa.text('uuid_generate_v4()'), nullable=False),
+    sa.Column('tenant_id', sa.UUID(), nullable=False),
+    sa.Column('wechat_app_id', sa.String(length=255), nullable=False),
+    sa.Column('app_id', sa.UUID(), nullable=False),
+    sa.Column('app_type', sa.String(length=32), server_default='app',comment="'app,web,open'", nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP(0)'), nullable=False),
+    sa.Column('created_by', sa.String(length=255), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP(0)'), nullable=True),
+    sa.Column('updated_by', sa.String(length=255), nullable=True),
+    sa.Column('visible', sa.Boolean(), server_default=sa.text('true'), nullable=False),
+    sa.PrimaryKeyConstraint('id', name='wechat_agent_visible_pkey')
+    )
+    with op.batch_alter_table('wechat_agent_visible', schema=None) as batch_op:
+        batch_op.create_index('wechat_agent_visible_tenant_idx', ['tenant_id'], unique=False)
+
+    op.create_table('dict_bindings',
+    sa.Column('id', sa.BIGINT(), autoincrement=True, nullable=False),
+    sa.Column('category_id', sa.INTEGER(), autoincrement=False, nullable=True),
+    sa.Column('target_id', sa.VARCHAR(length=128), autoincrement=False, nullable=True),
+    sa.Column('target_type', sa.VARCHAR(length=64), autoincrement=False, nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP(0)'), autoincrement=False, nullable=True),
+    sa.Column('created_by', sa.UUID(), autoincrement=False, nullable=False),
+    sa.PrimaryKeyConstraint('id', name='dict_bindings_pkey')
+    )
+    op.create_table('dict_category_closure',
+    sa.Column('parent_id', sa.INTEGER(), autoincrement=False, nullable=False),
+    sa.Column('child_id', sa.INTEGER(), autoincrement=False, nullable=False),
+    sa.PrimaryKeyConstraint('parent_id', 'child_id', name='dict_category_closure_pkey')
+    )
+    op.create_table('dict_categories',
+    sa.Column('id', sa.INTEGER(), autoincrement=True, nullable=False),
+    sa.Column('tenant_id', sa.UUID(), autoincrement=False, nullable=False),
+    sa.Column('name', sa.VARCHAR(length=255), autoincrement=False, nullable=False),
+    sa.Column('key', sa.VARCHAR(length=255), autoincrement=False, nullable=True),
+    sa.PrimaryKeyConstraint('id', name='dict_categories_pkey')
+    )
+    with op.batch_alter_table('dict_categories', schema=None) as batch_op:
+        batch_op.create_index('idx_dict_categories', ['key', 'tenant_id'], unique=True)
+
     # ### end Alembic commands ###
 
 
@@ -134,4 +175,13 @@ def downgrade():
         batch_op.drop_index('dataset_batch_hiting_test_id_idx')
 
     op.drop_table('dataset_batch_hiting_test')
+
+    with op.batch_alter_table('wechat_agent_visible', schema=None) as batch_op:
+        batch_op.drop_index('wechat_agent_visible_tenant_idx')
+
+    op.drop_table('wechat_agent_visible')
+    #### 字典表
+    op.drop_table('dict_bindings')
+    op.drop_table('dict_category_closure')
+    op.drop_table('dict_categories')
     # ### end Alembic commands ###
