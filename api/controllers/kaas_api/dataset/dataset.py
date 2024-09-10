@@ -11,7 +11,7 @@ from core.rag.extractor.entity.extract_setting import ExtractSetting
 from models.model import UploadFile
 import services.dataset_service
 from controllers.kaas_api import api
-from controllers.service_api.dataset.error import DatasetNameDuplicateError
+from controllers.service_api.dataset.error import DatasetInUseError, DatasetNameDuplicateError
 from fields.app_fields import related_app_list
 from core.model_runtime.entities.model_entities import ModelType
 from core.provider_manager import ProviderManager
@@ -90,7 +90,7 @@ class DatasetListApi(Resource):
 
     @setup_required
     @kaas_login_required
-    @validate_dream_ai_token(funcs='kaas:public')
+    @validate_dream_ai_token(funcs={'and':['kaas:public']})
     def post(self):
         """Resource for creating datasets."""
         tenant_id = str(current_user.current_tenant_id)
@@ -216,10 +216,10 @@ class RAGDatasetApi(Resource):
         # account = TenantService.get_tenant_creater(tenant_id=tenant_id)
 
         if args['permission'] == 'all_team_members' and \
-            not DreamAIService.check_permission('kaas:create_public'): # check dream ai token
+            not DreamAIService.check_permission({'and':['kaas:create_public']}): # check dream ai token
             raise Forbidden("对不起，您无权编辑公共知识库。")
         if args['permission'] == 'only_me' and \
-            not DreamAIService.check_permission('kaas:private'):
+            not DreamAIService.check_permission({'and':['kaas:private']}):
                 raise Forbidden("对不起，您无权管理知识库。")
         
         dataset = DatasetService.update_dataset(dataset_id_str, args, current_user)
@@ -229,13 +229,50 @@ class RAGDatasetApi(Resource):
 
         return marshal(dataset, dataset_detail_fields), 200
     
+    @setup_required
+    @kaas_login_required
+    def delete(self, dataset_id):
+        """
+        Deletes a dataset given its ID.
+
+        Args:
+            dataset_id (UUID): The ID of the dataset to be deleted.
+
+        Returns:
+            dict: A dictionary with a key 'result' and a value 'success' 
+                  if the dataset was successfully deleted. Omitted in HTTP response.
+            int: HTTP status code 204 indicating that the operation was successful.
+
+        Raises:
+            NotFound: If the dataset with the given ID does not exist.
+        """
+
+        dataset_id_str = str(dataset_id)
+
+        try:
+            
+            dataset = DatasetService.get_dataset(dataset_id_str)
+            if dataset:
+                if dataset.permission == 'only_me' and (not DreamAIService.check_permission({'and':['kaas:private']}) \
+                    or dataset.created_by != current_user.id): # check dream ai token
+                    raise Forbidden("对不起，您无权删除知识库。")
+                elif dataset.permission == 'all_team_members' and not DreamAIService.check_permission({'and':['kaas:del_public']}): # check dream ai token
+                    raise Forbidden("对不起，您无权删除公共知识库。")
+                         
+                if DatasetService.delete_dataset(dataset_id_str, current_user):
+                    return {'result': 'success'}, 204
+                else:
+                    raise NotFound("Dataset not found.")
+        except services.errors.dataset.DatasetInUseError:
+            raise DatasetInUseError()    
+    
 
 class RAGDatasetRelatedAppListApi(Resource):
 
     @marshal_with(related_app_list)
     @setup_required
     @kaas_login_required    
-    @validate_dream_ai_token(funcs='kaas:agent')
+    @validate_dream_ai_token(funcs={'and':['kaas:agent']})
     def get(self,  dataset_id):
         # tenant_id = str(current_user.current_tenant_id)
         dataset_id_str = str(dataset_id)
@@ -337,7 +374,7 @@ class RAGDocumentBatchIndexingStatusApi(Resource):
         # tenant_id = str(current_user.current_tenant_id)
         dataset_id = str(dataset_id)
         batch = str(batch)
-        documents = self.get_batch_documents(dataset_id, batch)
+        documents = DocumentService.get_batch_documents(dataset_id, batch)
         documents_status = []
         for document in documents:
             completed_segments = DocumentSegment.query.filter(

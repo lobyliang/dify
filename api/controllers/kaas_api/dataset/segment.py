@@ -5,7 +5,7 @@ from controllers.service_api.app.error import ProviderNotInitializeError
 from core.errors.error import LLMBadRequestError, ProviderTokenNotInitError
 from core.model_manager import ModelManager
 from extensions.ext_database import db
-from fields import segment_fields
+from fields.segment_fields import segment_fields
 from controllers.kaas_api import api
 from core.model_runtime.entities.model_entities import ModelType
 from libs.login import current_user, kaas_login_required

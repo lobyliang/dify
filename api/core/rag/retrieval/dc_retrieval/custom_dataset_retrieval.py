@@ -257,6 +257,7 @@ class CustomDataSetRetrieval:
         top_k: Optional[int] = None,
         score_threshold: Optional[float] = None,
         reranking_enable: Optional[bool] = True,
+        is_agent: Optional[bool] = False,
         # attach_detail: Optional[bool] = False,
         #  reranking_model: Optional[dict] = None
     ) -> Optional[str]:
@@ -301,7 +302,7 @@ class CustomDataSetRetrieval:
 
         user_from = (
             "account"
-            if invoke_from in [InvokeFrom.EXPLORE, InvokeFrom.DEBUGGER]
+            if invoke_from in [InvokeFrom.KAAS_API,InvokeFrom.EXPLORE, InvokeFrom.DEBUGGER]
             else "end_user"
         )
 
@@ -430,6 +431,7 @@ class CustomDataSetRetrieval:
                 ),
             )
             resource_number = 1
+            dataset_contents = ''
             for segment in sorted_segments:
                 answer = ""
                 if segment.answer:
@@ -442,6 +444,8 @@ class CustomDataSetRetrieval:
                     content["AI_answer"] = self.reorgenazie_output(
                         model_config, model_instance, query, answer
                     )
+                if is_agent:
+                    dataset_contents = dataset_contents+'\n'+answer
 
                 doc_res = {
                     "No": resource_number,
@@ -468,7 +472,7 @@ class CustomDataSetRetrieval:
                             "document_name": document.name,
                             "data_source_type": document.data_source_type,
                             "segment_id": segment.id,
-                            "retriever_from": invoke_from,
+                            "retriever_from": invoke_from.value,
                             "hit_count": segment.hit_count,
                             "word_count": segment.word_count,
                         }
@@ -500,10 +504,16 @@ class CustomDataSetRetrieval:
                         context_list.append(source)
                 resource_number += 1
                 document_context_list.append(doc_res)
+            ret = {"query_id": query_id,"items": document_context_list}
+            if is_agent:
+                agent_anser = self.reorgenazie_output(
+                        model_config, model_instance, query, dataset_contents
+                    )
+                ret["agent_answer"] = agent_anser
             if hit_callback:
                 hit_callback.return_retriever_resource_info(context_list)
 
-            return {"query_id": query_id, "items": document_context_list}
+            return ret
         return {"query_id": query_id, "items": []}
 
     def single_retrieve(

@@ -1,6 +1,7 @@
 from flask_login import current_user
 from controllers.console.setup import setup_required
 from controllers.kaas_api.wraps import validate_dream_ai_token
+from core.app.entities.app_invoke_entities import InvokeFrom
 from core.rag.retrieval.dc_retrieval.custom_dataset_retrieval import (
     CustomDataSetRetrieval,
 )
@@ -76,6 +77,9 @@ class RAGQueryApi(Resource):
             "show_source", type=bool, required=True, nullable=False, location="json"
         )
         parser.add_argument(
+            "is_agent", type=bool, required=True, nullable=False, location="json"
+        )
+        parser.add_argument(
             "attach_detail",
             type=bool,
             required=False,
@@ -95,23 +99,25 @@ class RAGQueryApi(Resource):
         tok_k = args["top_k"]
         score_threshold = args["score_threshold"]
         attach_detail = args["attach_detail"]
+        is_agent = args["is_agent"]
         # get dataset
         custom_dataset_retrieval = CustomDataSetRetrieval()
         return (
             custom_dataset_retrieval.retrieval(
-                user_id=ext_user_id,
+                user_id=current_user.id,
                 app_id=app_id,
                 retrieve_strategy=retrieve_strategy,
                 search_method=search_method,
                 dataset_ids=dataset_ids,
                 reorgenazie_output=reorgenaize,
                 query=query,
-                invoke_from="kaas_api",
+                invoke_from=InvokeFrom.KAAS_API,
                 show_retrieve_source=show_source,
                 tenant_id=tenant_id,
                 top_k=tok_k,
                 score_threshold=score_threshold,
                 hit_callback=None,
+                is_agent=is_agent,
                 # attach_detail=attach_detail,
             ),
             200,

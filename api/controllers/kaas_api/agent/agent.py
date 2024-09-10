@@ -31,7 +31,8 @@ class CreateAppApi(Resource):
     @kaas_login_required
     @marshal_with(related_app_list)
     @validate_dream_ai_token(funcs={'and':["kaas:agent"]})
-    def get(self, tenant_id):
+    def get(self):
+        tenant_id = str(current_user.current_tenant_id)
         argparser = reqparse.RequestParser()
         argparser.add_argument(
             "mode", type=AppMode, location="args", required=False, default=None
@@ -51,7 +52,8 @@ class CreateAppApi(Resource):
     @kaas_login_required
     @validate_dream_ai_token(funcs={'and':["kaas:agent"]})
     @marshal_with(app_detail_fields_with_site)
-    def post(self, tenant_id):
+    def post(self):
+        tenant_id = str(current_user.current_tenant_id)
         """Create app"""
         parser = reqparse.RequestParser()
         parser.add_argument("name", type=str, required=True, location="json")

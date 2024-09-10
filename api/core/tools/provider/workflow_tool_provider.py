@@ -1,5 +1,6 @@
 from typing import Optional
 
+import core
 from core.app.app_config.entities import VariableEntity
 from core.app.apps.workflow.app_config_manager import WorkflowAppConfigManager
 from core.model_runtime.entities.common_entities import I18nObject
@@ -123,11 +124,11 @@ class WorkflowToolProviderController(ToolProviderController):
                 workflow_tool_parameters.append(
                     ToolParameter(
                         name=parameter.name,
-                        label=I18nObject(
+                        label=core.tools.entities.common_entities.I18nObject(
                             en_US=variable.label,
                             zh_Hans=variable.label
                         ),
-                        human_description=I18nObject(
+                        human_description=core.tools.entities.common_entities.I18nObject(
                             en_US=parameter.description,
                             zh_Hans=parameter.description
                         ),
@@ -164,7 +165,7 @@ class WorkflowToolProviderController(ToolProviderController):
             identity=ToolIdentity(
                 author=user.name if user else '',
                 name=db_provider.name,
-                label=I18nObject(
+                label=core.tools.entities.common_entities.I18nObject(
                     en_US=db_provider.label,
                     zh_Hans=db_provider.label
                 ),
@@ -172,7 +173,7 @@ class WorkflowToolProviderController(ToolProviderController):
                 icon=db_provider.icon,
             ),
             description=ToolDescription(
-                human=I18nObject(
+                human=core.tools.entities.common_entities.I18nObject(
                     en_US=db_provider.description,
                     zh_Hans=db_provider.description
                 ),

@@ -14,6 +14,7 @@ class InvokeFrom(Enum):
     Invoke From.
     """
     SERVICE_API = 'service-api'
+    KAAS_API = 'kaas_api'
     WEB_APP = 'web-app'
     EXPLORE = 'explore'
     DEBUGGER = 'debugger'

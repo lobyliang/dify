@@ -76,6 +76,14 @@ class RAGQueryApi(DatasetApiResource):
             location="json",
         )
         parser.add_argument(
+            "is_agent",
+            type=bool,
+            default=True,
+            required=True,
+            nullable=False,
+            location="json",
+        )
+        parser.add_argument(
             "top_k", type=int, default=1, required=True, nullable=False, location="json"
         )
         parser.add_argument(
@@ -107,6 +115,7 @@ class RAGQueryApi(DatasetApiResource):
         search_method = args["search_method"]
         dataset_ids = args["dataset_ids"]
         reorgenaize = args["reorgenaize"]
+        is_agent = args["is_agent"]
         query = args["query"]
         show_source = args["show_source"]
         tok_k = args["top_k"]
@@ -129,6 +138,7 @@ class RAGQueryApi(DatasetApiResource):
                 top_k=tok_k,
                 score_threshold=score_threshold,
                 hit_callback=None,
+                is_agent = is_agent,
                 # attach_detail=attach_detail,
             ),
             200,

@@ -220,7 +220,7 @@ class TenantManage(Resource):
 
         for provider_config in TenantManage.providers:
             logging.info("开始初始化默认供应商{provider_config}")
-            DefaultModelService.add_model(tenant_id, provider_config)
+            DefaultModelService.add_provider(tenant_id, provider_config)
 
         DefaultModelService.add_model(tenant_id, TenantManage.llm_config)
         DefaultModelService.setDefaultModel(tenant_id, TenantManage.llm_config)
@@ -287,7 +287,7 @@ class TenantManage(Resource):
             
             hasTenant = TenantService.get_extent_tenant_count(ext_tenant_id)
             if hasTenant > 0:
-                return f"Tenant {email} aready exits", 400
+                return f"Tenant {ext_tenant_id}:{ext_tenant_name} aready exits aready exits", 400
         except Exception as e:
             return {"message": f"Unauthorized:{e}"}, 400
 
