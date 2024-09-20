@@ -174,12 +174,13 @@ class DictCategory(db.Model):
     __tablename__ = "dict_categories"
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="pk_dict_category_id"),
-        db.Index("idx_dict_categories", "key", "tenant_id", unique=True),
+        db.Index("idx_dict_categories", "key","type","tenant_id", unique=True),
     )
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(StringUUID, nullable=True)
     name = db.Column(db.String(255), nullable=False)
     key = db.Column(db.String(64), nullable=True)
+    type= db.Column(db.String(64), nullable=False)
 
 
 class DictCategoryClosure(db.Model):

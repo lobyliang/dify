@@ -9,6 +9,7 @@ from controllers.service_api.dataset.error import (
     InvalidMetadataError,
 )
 from controllers.service_api.dc_dataset.ds_create import DocumentResource
+from core.app.entities.app_invoke_entities import InvokeFrom
 from core.model_runtime.entities.model_entities import ModelType
 from fields.document_fields import document_fields
 from fields.app_fields import related_app_list
@@ -132,7 +133,7 @@ class RAGQueryApi(DatasetApiResource):
                 dataset_ids=dataset_ids,
                 reorgenazie_output=reorgenaize,
                 query=query,
-                invoke_from="service-api",
+                invoke_from=InvokeFrom.SERVICE_API,
                 show_retrieve_source=show_source,
                 tenant_id=tenant_id,
                 top_k=tok_k,

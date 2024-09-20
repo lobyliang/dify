@@ -7,6 +7,7 @@ from controllers.service_api.app.error import (
     ProviderNotInitializeError,
     ProviderQuotaExceededError,
 )
+from core.app.entities.app_invoke_entities import InvokeFrom
 from core.errors.error import (
     ModelCurrentlyNotSupportError,
     ProviderTokenNotInitError,
@@ -543,7 +544,7 @@ class KeyWordService:
                         dataset_ids=[dataset.id],
                         reorgenazie_output=False,
                         query=line,
-                        invoke_from="service-api",
+                        invoke_from=InvokeFrom.SERVICE_API,
                         show_retrieve_source=False,
                         tenant_id=tenant_id,
                         top_k=top_n,

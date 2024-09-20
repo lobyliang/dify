@@ -127,14 +127,16 @@ def upgrade():
     )
     op.create_table('dict_categories',
     sa.Column('id', sa.INTEGER(), autoincrement=True, nullable=False),
-    sa.Column('tenant_id', sa.UUID(), autoincrement=False, nullable=False),
-    sa.Column('name', sa.VARCHAR(length=255), autoincrement=False, nullable=False),
-    sa.Column('key', sa.VARCHAR(length=255), autoincrement=False, nullable=True),
+    sa.Column('tenant_id', sa.UUID(), nullable=False),
+    sa.Column('name', sa.VARCHAR(length=255), nullable=False),
+    sa.Column('key', sa.VARCHAR(length=255),  nullable=True),
+    sa.Column('type', sa.VARCHAR(length=64),  nullable=False),
     sa.PrimaryKeyConstraint('id', name='dict_categories_pkey')
     )
+    
     with op.batch_alter_table('dict_categories', schema=None) as batch_op:
-        batch_op.create_index('idx_dict_categories', ['key', 'tenant_id'], unique=True)
-
+        batch_op.create_index('idx_dict_categories', ['key','type', 'tenant_id'], unique=True)
+        
     # ### end Alembic commands ###
 
 

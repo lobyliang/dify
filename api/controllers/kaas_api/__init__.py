@@ -9,4 +9,4 @@ api = ExternalApi(bp)
 from . import index
 from .auth import role_manage
 from .agent import agent_questions,agent
-from .dataset import attach,search,document,hit_test,query_history,segment,dataset,batch_hit_test
+from .dataset import attach,search,document,hit_test,query_history,segment,dataset,batch_hit_test,dir,dir_binding
