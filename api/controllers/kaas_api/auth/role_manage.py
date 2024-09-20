@@ -7,6 +7,7 @@ from controllers.kaas_api.wraps import DreamAIResource
 from controllers.kaas_api import api
 from services.account_service import AccountService, TenantService
 from extensions.ext_database import db
+
 class DRReisterApi(DreamAIResource):
     def post(self,ext_user_id:str,ext_tenant_id:str,ext_phone_no:str):
         try:
@@ -29,6 +30,27 @@ class DRReisterApi(DreamAIResource):
             db.session.rollback()
             raise Conflict(f"账户{ext_phone_no},id:{ext_user_id}已注册")
         return {'user_id':str(account.id),'tenant_id':str(tenant.id),'msg':'注册成功'},200
+
+class DRUnregisterApi(DreamAIResource):
+    def post(self,ext_user_id:str,ext_tenant_id:str,ext_phone_no:str):
+        try:
+            tenant = TenantService.get_tenant_by_ext_tenant_id(ext_tenant_id=ext_tenant_id)
+            email = (
+                    f"""{ext_phone_no}"""
+                    + "@"
+                    + current_app.config["DEFAULT_DERAM_CLOUD_EMAIL_DOMAIN"]
+                )
+            account = AccountService.load_by_email(email=email)
+            if not account:
+                raise Conflict(f"账户{ext_phone_no},id:{ext_user_id}未注册")
+            TenantService.remove_member_from_tenant(tenant=tenant,account=account)
+        except Exception as e:
+            logging.error(f"unregister account error:{e}")
+            db.session.rollback()
+            raise Conflict(f"账户{ext_phone_no},id:{ext_user_id} 注销失败")
+        except Conflict as e:
+            raise e
+        return {'user_id':str(account.id),'tenant_id':str(tenant.id),'msg':'注销成功'},200
 
 class DRLoginApi(DreamAIResource):
     def post(self,ext_user_id:str,ext_tenant_id:str,ext_phone_no:str):
@@ -163,3 +185,4 @@ api.add_resource(DRReisterApi, "/auth/register")
 
 api.add_resource(DRLoginApi, "/auth/login")
 api.add_resource(DRFuncsApi, "/auth/funcs")
+api.add_resource(DRUnregisterApi, "/auth/unregister")
