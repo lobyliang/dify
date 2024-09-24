@@ -1,38 +1,27 @@
 import logging
-from flask import json, request,current_app
-from flask_restful import Resource, marshal_with, reqparse,fields
-from controllers.console.app.app import ALLOW_CREATE_APP_MODES
-from controllers.console.app.wraps import get_app_model
+from flask_restful import Resource, reqparse
 from controllers.console.setup import setup_required
-from controllers.kaas_api.wraps import validate_dream_ai_token
 from controllers.service_api.app.error import AppUnavailableError, CompletionRequestError, ConversationCompletedError, NotChatAppError, ProviderModelCurrentlyNotSupportError, ProviderNotInitializeError, ProviderQuotaExceededError
-from core.agent.entities import AgentToolEntity
 from core.app.apps.base_app_queue_manager import AppQueueManager
 from core.app.entities.app_invoke_entities import InvokeFrom
 from core.errors.error import ModelCurrentlyNotSupportError, ProviderTokenNotInitError, QuotaExceededError
 from core.model_runtime.errors.invoke import InvokeError
-from core.tools.tool_manager import ToolManager
-from core.tools.utils.configuration import ToolParameterConfigurationManager
-from models.dataset import AppDatasetJoin
 import services
 from services.app_generate_service import AppGenerateService
-from services.app_model_config_service import AppModelConfigService
-from services.app_service import AppService
-from events.app_event import app_model_config_was_updated
 from libs import helper
-from libs.helper import TimestampField, uuid_value
+from libs.helper import uuid_value
 from extensions.ext_database import db
-from models.model import AppModelConfig,App, AppMode
+from models.model import App, AppMode
 from controllers.kaas_api import api
 from libs.login import current_user, kaas_login_required
-from werkzeug.exceptions import BadRequest, Forbidden,NotFound,InternalServerError
+from werkzeug.exceptions import NotFound,InternalServerError
 
 from services.dc_question_service import QuestionService
 import services.errors
 import services.errors.app_model_config
 import services.errors.conversation
 
-class ChatRobot(Resource):
+class AgentChatRobot(Resource):
     # @dream_validate_cmd_token(
     #     fetch_user_arg=FetchUserArg(fetch_from=WhereisUserArg.JSON, required=True)
     # )
@@ -125,7 +114,7 @@ class ChatRobot(Resource):
             raise InternalServerError()
 
 
-class ChatRobotStopApi(Resource):
+class AgentChatRobotStopApi(Resource):
     # @dream_validate_cmd_token(
     #     fetch_user_arg=FetchUserArg(fetch_from=WhereisUserArg.JSON, required=True)
     # )
@@ -141,5 +130,5 @@ class ChatRobotStopApi(Resource):
         return {"result": "success"}, 200
 
 
-api.add_resource(ChatRobot, "/chat_robot/")
-api.add_resource(ChatRobotStopApi, "/chat_robot/<string:task_id>/stop")
+api.add_resource(AgentChatRobot, "/agent/chat_robot/")
+api.add_resource(AgentChatRobotStopApi, "/agent/chat_robot/<string:task_id>/stop")

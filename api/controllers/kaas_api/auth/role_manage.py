@@ -2,15 +2,24 @@ import copy
 import logging
 from flask import current_app,  request
 from flask_restful import Resource, reqparse
+import sqlalchemy
+import sqlalchemy.exc
 from werkzeug.exceptions import Conflict
 from controllers.kaas_api.wraps import DreamAIResource
 from controllers.kaas_api import api
 from services.account_service import AccountService, TenantService
 from extensions.ext_database import db
-
+import sqlalchemy
 class DRReisterApi(DreamAIResource):
     def post(self,ext_user_id:str,ext_tenant_id:str,ext_phone_no:str):
         try:
+            parser = reqparse.RequestParser()
+            parser.add_argument('phone', type=str, required=False, default=None, location='json')
+            parser.add_argument('tenant_no', type=str, required=False, default=None, location='json')
+            args = parser.parse_args()
+            if args['tenant_no']:
+                ext_tenant_id = args['tenant_no']
+                ext_phone_no = args['phone']
             tenant = TenantService.get_tenant_by_ext_tenant_id(ext_tenant_id=ext_tenant_id)
             email = (
                     f"""{ext_phone_no}"""
@@ -25,6 +34,8 @@ class DRReisterApi(DreamAIResource):
                             password='123456',
                             timezone='Asia/Shanghai')
             TenantService.create_tenant_member(tenant=tenant,account=account)
+        except sqlalchemy.exc.IntegrityError as e:
+            raise Conflict(f"账户{ext_phone_no},id:{ext_user_id}已注册")
         except Exception as e:
             logging.error(f"create account error:{e}")
             db.session.rollback()
