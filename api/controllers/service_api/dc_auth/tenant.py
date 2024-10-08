@@ -8,6 +8,7 @@ from core.model_runtime.entities.model_entities import ProviderModel
 from core.model_runtime.utils.encoders import jsonable_encoder
 from libs.passport import PassportService
 from models.account import Account, AccountStatus
+from sqlalchemy.exc import MultipleResultsFound
 from models.model import ApiToken
 from models.provider import TenantDefaultModel
 from controllers.service_api import api
@@ -299,18 +300,19 @@ class TenantManage(Resource):
                 + "@"
                 + current_app.config["DEFAULT_DERAM_CLOUD_EMAIL_DOMAIN"]
             )
-
+        account = None
+        tenant = None
         try:
             old_account = AccountService.load_by_email(email)
             if old_account:
                 # return f"Account {email} aready exits", 400
                 if not ext_tenant_name:
-                    ext_tenant_name = f"{old_account.name}_{ext_tenant_id}'s Workspace"
+                    ext_tenant_name = f"{old_account.name}_{ext_tenant_id}的工作空间"
                 tenant = TenantService.create_tenant(ext_tenant_name)
                 TenantService.create_tenant_member(tenant, old_account, "owner")
                 account = old_account
             else:
-                password = "qwer1234"
+                password =  "qwer1234"#args["user_name"][4:]#
                 if args["password"]:
                     password = args["password"]
                 # account = RegisterService.register(
@@ -333,12 +335,23 @@ class TenantManage(Resource):
                 TenantService.create_owner_tenant_if_not_exist(account, ext_tenant_name)
                 tenants = TenantService.get_join_tenants(account)
                 tenant = tenants[0]
+        except MultipleResultsFound as e:
+            logging.error(f"存在多个相同手机号的账号：{args["user_name"]}")
+            return {"msg": "Failed to create tenant", "error": "存在多个相同手机号的账号："+args["user_name"]}, 400
+        except Exception as e:
+            logging.error(e)
+            return {"msg": "Failed to create tenant"}, 500
 
+        if not account or not tenant:
+            return {"msg": "创建租户失败"}, 500    
+
+        try:
             custom_config = {"user_name": args["user_name"]}
             # if args["token"]:
             custom_config["extent_tenant_id"] = ext_tenant_id
             custom_config["extent_user_id"] = ext_user_id
             custom_config["ext_tenant_name"] = ext_tenant_name
+            
             tenant.custom_config = json.dumps(custom_config)
             db.session.commit()
 
@@ -364,6 +377,7 @@ class TenantManage(Resource):
             "create_at": str(tenant.created_at),
         }, 200
 
+    
     @staticmethod
     def clear_tenant(tenant_id: str):
         tenant = TenantService.get_tenant_creater(tenant_id)
@@ -467,11 +481,24 @@ class RAGModelProviderModelParameterRuleApi(DatasetApiResource):
 
         return jsonable_encoder({"data": parameter_rules})
 
+class ArchiveTenantAPI(DatasetApiResource):
+    def delete(self, tenant_id):
+        parser = reqparse.RequestParser()
+        parser.add_argument(
+            "extent_tenant_id", type=str, required=False, nullable=True, location="json"
+        )
+        args = parser.parse_args()
+        extent_tenant_id = args.get("extent_tenant_id")
+        tenant = TenantService.get_tenant_by_ext_tenant_id(extent_tenant_id) if extent_tenant_id else None
+        if not tenant:
+            return {"msg": "Tenant not found"}, 404
+        TenantService.archive_tenant(tenant)
+        return {"msg": "Tenant archived successfully"}, 200
 
 api.add_resource(
     RAGModelProviderModelParameterRuleApi,
     "/dreamcloud/model-providers/<string:provider>/models/parameter-rules",
 )
-
+api.add_resource(TenantManage, "/dreamcloud/tenant/archive")
 api.add_resource(TenantManage, "/dreamcloud/tenant/create")
 # api.add_resource(TenantManage, '/dreamcloud/tenant/<string:tenant_id>/delete')

@@ -458,6 +458,12 @@ class TenantService:
         db.session.commit()
 
     @staticmethod
+    def archive_tenant(tenant: Tenant)->None:
+        """Archive tenant"""
+        tenant.status = TenantStatus.ARCHIVE.value
+        db.session.commit()
+
+    @staticmethod
     def get_custom_config(tenant_id: str) -> None:
         tenant = db.session.query(Tenant).filter(Tenant.id == tenant_id).one_or_404()
 

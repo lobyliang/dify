@@ -44,7 +44,7 @@ class DatasetListApi(Resource):
     def get(self):
         """Resource for getting datasets."""
         if not DreamAIService.check_permission({'and':['kaas:create_public','kaas:private']}):
-            raise Forbidden("对不起，您无权创建知识库。")
+            raise Forbidden("对不起，您无权访问知识库。")
         tenant_id = str(current_user.current_tenant_id)
         page = request.args.get('page', default=1, type=int)
         limit = request.args.get('limit', default=20, type=int)

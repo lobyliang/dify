@@ -21,6 +21,8 @@ class DRReisterApi(DreamAIResource):
                 ext_tenant_id = args['tenant_no']
                 ext_phone_no = args['phone']
             tenant = TenantService.get_tenant_by_ext_tenant_id(ext_tenant_id=ext_tenant_id)
+            if not tenant:
+                return {'msg':'租户不存在'},404
             email = (
                     f"""{ext_phone_no}"""
                     + "@"
@@ -92,6 +94,7 @@ class DRLoginApi(DreamAIResource):
             # todo: return the user info
             token = AccountService.get_account_jwt_token(account)
         except Exception as e:
+            logging.warning(f"{ext_phone_no}:登录失败:{e}")
             return {'result': 'fail', 'data': str(e)}, 401
 
         return {'result': 'success', 'data': token},200
